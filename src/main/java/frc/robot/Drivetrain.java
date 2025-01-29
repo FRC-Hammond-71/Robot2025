@@ -25,7 +25,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 /** Represents a swerve drive style drivetrain. */
 public class Drivetrain {
   public static final double kMaxSpeed = 0.5; // 3 meters per second
-  public static final double kMaxAngularSpeed = Math.PI / 2; // 1/2 rotation per second
+  public static final double kMaxAngularSpeed = Math.PI / 4; // 1/2 rotation per second
 
   private final Translation2d m_frontLeftLocation = new Translation2d(0.381, 0.381);
   private final Translation2d m_frontRightLocation = new Translation2d(0.381, -0.381);
@@ -37,7 +37,7 @@ public class Drivetrain {
   private final SwerveModule m_backLeft = new SwerveModule(14,15);
   private final SwerveModule m_backRight = new SwerveModule(16,17);
 
-  private final PIDController m_headingPID = new PIDController(1, 0, 0);
+  private final PIDController m_headingPID = new PIDController(0.25, 0, 0);
   // private final ProfiledPIDController m_headingPID = new ProfiledPIDController(0.5,0, 0, new TrapezoidProfile.Constraints(Math.PI, Math.PI / 4));
   //private final AnalogGyro m_gyro = new AnalogGyro(0);
   private final AHRS m_gyro = new AHRS(NavXComType.kMXP_SPI);
@@ -55,12 +55,13 @@ public class Drivetrain {
 
   public void GyroReset() {
 	  m_gyro.reset();
+    m_gyro.zeroYaw();
   }
 
 
   public Drivetrain()
   {
-    this.m_headingPID.enableContinuousInput(0, Math.PI * 2);
+    this.m_gyro.resetDisplacement();
   }
 
   /**
@@ -73,17 +74,19 @@ public class Drivetrain {
    */
   public void Drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative, double periodSeconds) {
 
-    
+    this.m_headingPID.enableContinuousInput(0, Math.PI * 2);
+    this.m_headingPID.setTolerance(5 * (Math.PI / 180));
+
     // final ChassisSpeeds m_cSpeeds = new ChassisSpeeds(xSpeed, ySpeed, 45);
     
     final double kpOutput = m_headingPID.calculate(getGyroHeading().getRadians(), rot);
     
     SmartDashboard.putNumber("asdasd", kpOutput);
 
-    ChassisSpeeds TargetSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, kpOutput, this.getGyroHeading());
+    // ChassisSpeeds TargetSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, kpOutput, this.getGyroHeading());
 
     // SwerveModuleState[] swerveModuleStates = m_kinematics.toSwerveModuleStates(ChassisSpeeds.discretize(fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, kpOutput, m_gyro.getRotation2d()) : new ChassisSpeeds(xSpeed, ySpeed, kpOutput), periodSeconds));
-    SwerveModuleState[] swerveModuleStates = m_kinematics.toSwerveModuleStates(TargetSpeeds);
+    SwerveModuleState[] swerveModuleStates = m_kinematics.toSwerveModuleStates(new ChassisSpeeds(xSpeed, ySpeed, kpOutput));
     
     swerveModuleStates[0].optimize(this.m_frontLeft.getAzimuthRotation());
     swerveModuleStates[1].optimize(this.m_frontRight.getAzimuthRotation());
@@ -119,13 +122,7 @@ public class Drivetrain {
   }
 
   public Rotation2d getGyroHeading() {
-    return Rotation2d.fromDegrees(m_gyro.getFusedHeading());
-  }
-
-  public void ResetGyroHeading() {
-    // this.m_gyro.resetDisplacement();
-    // this.m_gyro.reset();
-    this.m_gyro.setAngleAdjustment(-this.getGyroHeading().getDegrees());
+    return Rotation2d.fromDegrees(-m_gyro.getAngle());
   }
 
   public void dashboardPrint() {
@@ -133,7 +130,7 @@ public class Drivetrain {
 	SmartDashboard.putNumber("FL Rotation", m_frontLeft.getAzimuthRotation().getDegrees());
 	SmartDashboard.putNumber("BR Rotation", m_backRight.getAzimuthRotation().getDegrees());
 	SmartDashboard.putNumber("BL Rotation", m_backLeft.getAzimuthRotation().getDegrees());
-  SmartDashboard.putNumber("GYRO", m_gyro.getFusedHeading());
+  SmartDashboard.putNumber("GYRO", this.getGyroHeading().getDegrees());
 	// SmartDashboard.putString("State fr", m_frontRight.getState().toString());
 	// SmartDashboard.putString("State fl", m_frontLeft.getState().toString());
 	// SmartDashboard.putString("State br", m_backRight.getState().toString());

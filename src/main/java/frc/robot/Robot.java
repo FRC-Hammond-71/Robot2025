@@ -26,7 +26,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
-   // m_swerve.GyroReset();\][]
+   m_swerve.GyroReset();
   }
 
   @Override
@@ -34,8 +34,8 @@ public class Robot extends TimedRobot {
     m_swerve.dashboardPrint();  
     
     if (m_controller.getYButton()) {
-      this.m_swerve.ResetGyroHeading();
-      System.out.println("Blah blah blah yap yap yap123");
+      this.m_swerve.GyroReset();
+      System.out.println("");
     }
   }
 
@@ -61,13 +61,13 @@ public class Robot extends TimedRobot {
     // Get the x speed. We are inverting this because Xbox controllers return
     // negative values when we push forward.
     final var xSpeed =
-        m_xspeedLimiter.calculate(MathUtil.applyDeadband(m_controller.getLeftY(), 0.1)) * Drivetrain.kMaxSpeed;
+        m_xspeedLimiter.calculate(Math.pow(MathUtil.applyDeadband(-m_controller.getLeftY(), 0.15), 3)) * Drivetrain.kMaxSpeed;
 
     // Get the y speed or sideways/strafe speed. We are inverting this because
     // we want a positive value when we pull to the left. Xbox controllers
     // return positive values when you pull to the right by default.
     final var ySpeed =
-        m_yspeedLimiter.calculate(MathUtil.applyDeadband(m_controller.getLeftX(), 0.1)) * Drivetrain.kMaxSpeed;
+        m_yspeedLimiter.calculate(Math.pow(MathUtil.applyDeadband(m_controller.getLeftX(), 0.15), 3)) * Drivetrain.kMaxSpeed;
 
     // Get the rate of angular rotation. We are inverting this because we want a
     // positive value when we pull to the left (remember, CCW is positive in
@@ -79,7 +79,7 @@ public class Robot extends TimedRobot {
     // final var rot = Math.atan(-m_controller.getRightY() / m_controller.getRightX());
     double rot = 0;
 
-    rot = Math.atan2(-m_controller.getRightY(), m_controller.getRightX());
+    rot = Math.atan2(MathUtil.applyDeadband(-m_controller.getRightY(), 0.15), MathUtil.applyDeadband(m_controller.getRightX(), 0.15));
     if (rot < 0)
     {
       rot += Math.PI * 2;
@@ -113,7 +113,7 @@ public class Robot extends TimedRobot {
     }
     //(reserved for climb)
     if (m_controller.getYButtonPressed()) {
-      
+      m_swerve.GyroReset();
     }
     // Open intake X
     if (m_controller.getXButtonPressed()) {
