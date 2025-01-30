@@ -81,7 +81,7 @@ public class Drivetrain {
     
     final double kpOutput = m_headingPID.calculate(getGyroHeading().getRadians(), rot);
     
-    SmartDashboard.putNumber("asdasd", kpOutput);
+    SmartDashboard.putNumber("PID-Calculated Output", kpOutput);
 
     // ChassisSpeeds TargetSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, kpOutput, this.getGyroHeading());
 
@@ -130,7 +130,7 @@ public class Drivetrain {
 	SmartDashboard.putNumber("FL Rotation", m_frontLeft.getAzimuthRotation().getDegrees());
 	SmartDashboard.putNumber("BR Rotation", m_backRight.getAzimuthRotation().getDegrees());
 	SmartDashboard.putNumber("BL Rotation", m_backLeft.getAzimuthRotation().getDegrees());
-  SmartDashboard.putNumber("GYRO", this.getGyroHeading().getDegrees());
+  SmartDashboard.putNumber("Gyro Heading", this.getGyroHeading().getDegrees());
 	// SmartDashboard.putString("State fr", m_frontRight.getState().toString());
 	// SmartDashboard.putString("State fl", m_frontLeft.getState().toString());
 	// SmartDashboard.putString("State br", m_backRight.getState().toString());

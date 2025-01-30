@@ -80,10 +80,11 @@ public class Robot extends TimedRobot {
     double rot = 0;
 
     rot = Math.atan2(MathUtil.applyDeadband(-m_controller.getRightY(), 0.15), MathUtil.applyDeadband(m_controller.getRightX(), 0.15));
-    if (rot < 0)
-    {
-      rot += Math.PI * 2;
-    }
+    
+    // if (rot < 0)
+    // {
+    //   rot += Math.PI * 2;
+    // }
 
     // if (m_controller.getAButton()) {
     //   rot = Math.PI;
@@ -123,7 +124,5 @@ public class Robot extends TimedRobot {
     if (m_controller.getBButtonPressed()) {
       
     }
-
-
   }
 }
