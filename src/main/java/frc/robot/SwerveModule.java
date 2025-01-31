@@ -7,18 +7,21 @@ import edu.wpi.first.math.geometry.Rotation2d;
 // import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.SPI;
 //import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 // import edu.wpi.first.wpilibj.XboxController;
 
 
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkAbsoluteEncoder;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-// import com.revrobotics.spark.config.SparkBaseConfig;
-// import com.revrobotics.spark.config.SparkMaxConfig;
-// import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-// import com.revrobotics.RelativeEncoder;
+import com.revrobotics.spark.config.SparkBaseConfig;
+import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.spark.SparkBase.ResetMode;
 
 
 public class SwerveModule
@@ -54,6 +57,7 @@ public class SwerveModule
         // this.offset = azimuthOffset;
 
         this.DriveMotor = new SparkMax(driveMotorDeviceId, MotorType.kBrushless);
+        this.DriveMotor.configure(new SparkMaxConfig().idleMode(IdleMode.kBrake), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
      //   this.DriveMotor.setIdleMode(IdleMode.kCoast);
 
        this.AzimuthPID.enableContinuousInput(0, 360);

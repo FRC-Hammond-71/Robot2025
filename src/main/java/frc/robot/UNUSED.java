@@ -16,9 +16,10 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+
 // 0 is one driver, 1 is two.
 
-public class SwerveDrive extends SubsystemBase
+public class UNUSED extends SubsystemBase
 {
     
     public static int controllersetting = 0;
@@ -29,7 +30,7 @@ public class SwerveDrive extends SubsystemBase
     SwerveModule[]        swerveModules;
     
     // Constructor
-    public SwerveDrive() 
+    public UNUSED() 
     {
 
         kinematics = new SwerveDriveKinematics(

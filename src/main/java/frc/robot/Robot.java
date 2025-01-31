@@ -67,7 +67,7 @@ public class Robot extends TimedRobot {
     // we want a positive value when we pull to the left. Xbox controllers
     // return positive values when you pull to the right by default.
     final var ySpeed =
-        m_yspeedLimiter.calculate(Math.pow(MathUtil.applyDeadband(m_controller.getLeftX(), 0.15), 3)) * Drivetrain.kMaxSpeed;
+        m_yspeedLimiter.calculate(Math.pow(MathUtil.applyDeadband(-m_controller.getLeftX(), 0.15), 3)) * Drivetrain.kMaxSpeed;
 
     // Get the rate of angular rotation. We are inverting this because we want a
     // positive value when we pull to the left (remember, CCW is positive in

@@ -74,8 +74,8 @@ public class Drivetrain {
    */
   public void Drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative, double periodSeconds) {
 
-    this.m_headingPID.enableContinuousInput(0, Math.PI * 2);
-    this.m_headingPID.setTolerance(5 * (Math.PI / 180));
+    // this.m_headingPID.enableContinuousInput(0, Math.PI * 2);
+    this.m_headingPID.setTolerance(2 * (Math.PI / 180));
 
     // final ChassisSpeeds m_cSpeeds = new ChassisSpeeds(xSpeed, ySpeed, 45);
     
