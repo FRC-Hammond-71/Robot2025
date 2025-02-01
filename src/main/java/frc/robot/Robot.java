@@ -26,7 +26,6 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
-   m_swerve.GyroReset();
   }
 
   @Override
@@ -35,7 +34,7 @@ public class Robot extends TimedRobot {
     
     if (m_controller.getYButton()) {
       this.m_swerve.GyroReset();
-      System.out.println("");
+      System.out.println("GYRO RESET");
     }
   }
 
@@ -47,11 +46,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopPeriodic() {
-    //m_swerve.updateOdometry();
     m_swerve.updateOdometry();
-
-  
-    
     driveWithJoystick(true);
     driverControls();
   }
@@ -98,7 +93,6 @@ public class Robot extends TimedRobot {
     // else {
     //   rot = 0;
     // }
-
 
         SmartDashboard.putNumber("xSpeed", xSpeed);
         SmartDashboard.putNumber("ySpeed", ySpeed);

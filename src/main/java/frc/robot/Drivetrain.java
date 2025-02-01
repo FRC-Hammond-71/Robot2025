@@ -79,14 +79,15 @@ public class Drivetrain {
 
     // final ChassisSpeeds m_cSpeeds = new ChassisSpeeds(xSpeed, ySpeed, 45);
     
-    final double kpOutput = m_headingPID.calculate(getGyroHeading().getRadians(), rot);
+    // final double kpOutput = m_headingPID.calculate(getGyroHeading().getRadians(), rot);
+    final double kpOutput = 0;
     
     SmartDashboard.putNumber("PID-Calculated Output", kpOutput);
 
-    // ChassisSpeeds TargetSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, kpOutput, this.getGyroHeading());
+    ChassisSpeeds TargetSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, kpOutput, this.getGyroHeading());
 
     // SwerveModuleState[] swerveModuleStates = m_kinematics.toSwerveModuleStates(ChassisSpeeds.discretize(fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, kpOutput, m_gyro.getRotation2d()) : new ChassisSpeeds(xSpeed, ySpeed, kpOutput), periodSeconds));
-    SwerveModuleState[] swerveModuleStates = m_kinematics.toSwerveModuleStates(new ChassisSpeeds(xSpeed, ySpeed, kpOutput));
+    SwerveModuleState[] swerveModuleStates = m_kinematics.toSwerveModuleStates(TargetSpeeds);
     
     swerveModuleStates[0].optimize(this.m_frontLeft.getAzimuthRotation());
     swerveModuleStates[1].optimize(this.m_frontRight.getAzimuthRotation());
