@@ -41,9 +41,9 @@ public class SwerveModule
 
     private SparkMax DriveMotor;
     
-    private PIDController AzimuthPID = new PIDController(0.1 , 0, 0);
+    private PIDController AzimuthPID = new PIDController(0.1, 0, 0);
 
-    private SlewRateLimiter DriveRateLimiter = new SlewRateLimiter(4);
+    private SlewRateLimiter DriveRateLimiter = new SlewRateLimiter(6);
 
     public SwerveModule(int azimuthMotorDeviceId, int driveMotorDeviceId)
     {
@@ -117,5 +117,13 @@ public class SwerveModule
 
         SmartDashboard.putNumber("MK4iSwerveModule Drive Control", state.speedMetersPerSecond);
         SmartDashboard.putNumber("MK4iSwerveModule Drive Voltage", driveVoltage);
+    }
+
+    public SwerveModuleState getDesiredState() {
+      return new SwerveModuleState(this.getSpeed(), this.getAzimuthRotation());
+    }
+    
+    public double getSpeed() {
+      return this.DriveMotor.getEncoder().getVelocity()/60/kDriveGearing*kDriveCircumference;
     }
 }

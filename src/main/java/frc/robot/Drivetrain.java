@@ -9,6 +9,7 @@ import com.studica.frc.AHRS.NavXComType;
 import com.studica.frc.AHRS.NavXUpdateRate;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Pose2d;
 // import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -17,6 +18,9 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 // import edu.wpi.first.math.trajectory.TrapezoidProfile;
 // import edu.wpi.first.math.trajectory.ExponentialProfile.Constraints;
 // import edu.wpi.first.wpilibj.AnalogGyro;
@@ -24,23 +28,34 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /** Represents a swerve drive style drivetrain. */
 public class Drivetrain {
-  public static final double kMaxSpeed = 0.5; // 3 meters per second
-  public static final double kMaxAngularSpeed = Math.PI / 4; // 1/2 rotation per second
+  private final Field2d m_field = new Field2d();
+  public static final double kMaxSpeed = 2; // 3 meters per second
+  public static final double kMaxAngularSpeed = Math.PI / 2; // 1/2 rotation per second
 
   private final Translation2d m_frontLeftLocation = new Translation2d(0.381, 0.381);
   private final Translation2d m_frontRightLocation = new Translation2d(0.381, -0.381);
   private final Translation2d m_backLeftLocation = new Translation2d(-0.381, 0.381);
   private final Translation2d m_backRightLocation = new Translation2d(-0.381, -0.381);
 
-  private final SwerveModule m_frontLeft = new SwerveModule(10,11);
-  private final SwerveModule m_frontRight = new SwerveModule(12,13);
-  private final SwerveModule m_backLeft = new SwerveModule(14,15);
-  private final SwerveModule m_backRight = new SwerveModule(16,17);
+  private final SwerveModule m_frontLeft = new SwerveModule(14,15);
+  private final SwerveModule m_frontRight = new SwerveModule(16,17);
+  private final SwerveModule m_backLeft = new SwerveModule(12,13);
+  private final SwerveModule m_backRight = new SwerveModule(10,11);
 
-  private final PIDController m_headingPID = new PIDController(0.25, 0, 0);
+  // Lower when we add simple feed forward!!!!!!
+  private final PIDController m_headingPID = new PIDController(1.8, 0, 0);
   // private final ProfiledPIDController m_headingPID = new ProfiledPIDController(0.5,0, 0, new TrapezoidProfile.Constraints(Math.PI, Math.PI / 4));
   //private final AnalogGyro m_gyro = new AnalogGyro(0);
   private final AHRS m_gyro = new AHRS(NavXComType.kMXP_SPI);
+
+  public final StructArrayPublisher<SwerveModuleState> ActualSwervePublisher = NetworkTableInstance.getDefault()
+  .getStructArrayTopic("ActualStates", SwerveModuleState.struct).publish();
+  public final StructArrayPublisher<SwerveModuleState> DesiredSwervePublisher = NetworkTableInstance.getDefault()
+  .getStructArrayTopic("DesiredStates", SwerveModuleState.struct).publish();
+
+  // public final StructArrayPublisher<ChassisSpeeds> ChassisSpeeds = NetworkTableInstance.getDefault()
+  // .getStructArrayTopic("ChassisSpeeds", ChassisSpeeds.struct).publish();
+
   
   private final SwerveDriveKinematics m_kinematics =
 	  new SwerveDriveKinematics(m_frontLeftLocation, m_frontRightLocation, m_backLeftLocation, m_backRightLocation);
@@ -61,7 +76,7 @@ public class Drivetrain {
 
   public Drivetrain()
   {
-    this.m_gyro.resetDisplacement();
+    SmartDashboard.putData("Field", m_field);
   }
 
   /**
@@ -78,35 +93,61 @@ public class Drivetrain {
     this.m_headingPID.setTolerance(2 * (Math.PI / 180));
 
     // final ChassisSpeeds m_cSpeeds = new ChassisSpeeds(xSpeed, ySpeed, 45);
-    
-    // final double kpOutput = m_headingPID.calculate(getGyroHeading().getRadians(), rot);
-    final double kpOutput = 0;
-    
-    SmartDashboard.putNumber("PID-Calculated Output", kpOutput);
 
+    
+
+    final double kpOutput = m_headingPID.calculate(getGyroHeading().getRadians(), rot);
+
+    SmartDashboard.putNumber("PID-Calculated Output", kpOutput);
+    //final double kpOutput = 0;
+
+    
+    
     ChassisSpeeds TargetSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, kpOutput, this.getGyroHeading());
 
+    // SmartDashboard.putData("", new Pose2d(0, 0));
+
+    // m_field.setRobotPose(m_odometry.getPoseMeters());
     // SwerveModuleState[] swerveModuleStates = m_kinematics.toSwerveModuleStates(ChassisSpeeds.discretize(fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, kpOutput, m_gyro.getRotation2d()) : new ChassisSpeeds(xSpeed, ySpeed, kpOutput), periodSeconds));
     SwerveModuleState[] swerveModuleStates = m_kinematics.toSwerveModuleStates(TargetSpeeds);
     
+    SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, kMaxSpeed);
+    
     swerveModuleStates[0].optimize(this.m_frontLeft.getAzimuthRotation());
     swerveModuleStates[1].optimize(this.m_frontRight.getAzimuthRotation());
-    swerveModuleStates[2].optimize(this.m_backRight.getAzimuthRotation());
-    swerveModuleStates[3].optimize(this.m_backLeft.getAzimuthRotation());
+    swerveModuleStates[2].optimize(this.m_backLeft.getAzimuthRotation());
+    swerveModuleStates[3].optimize(this.m_backRight.getAzimuthRotation());
+    
 
     swerveModuleStates[0].speedMetersPerSecond*=swerveModuleStates[0].angle.minus(this.m_frontLeft.getAzimuthRotation()).getCos();
     swerveModuleStates[1].speedMetersPerSecond*=swerveModuleStates[1].angle.minus(this.m_frontRight.getAzimuthRotation()).getCos();
-    swerveModuleStates[2].speedMetersPerSecond*=swerveModuleStates[2].angle.minus(this.m_backRight.getAzimuthRotation()).getCos();
-    swerveModuleStates[3].speedMetersPerSecond*=swerveModuleStates[3].angle.minus(this.m_backLeft.getAzimuthRotation()).getCos();
+    swerveModuleStates[2].speedMetersPerSecond*=swerveModuleStates[2].angle.minus(this.m_backLeft.getAzimuthRotation()).getCos();
+    swerveModuleStates[3].speedMetersPerSecond*=swerveModuleStates[3].angle.minus(this.m_backRight.getAzimuthRotation()).getCos();
 
     
 
     // SwerveModuleState[] swerveModuleStates = m_kinematics.toSwerveModuleStates(new ChassisSpeeds(xSpeed, ySpeed, rot));
-    // SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, kMaxSpeed);
     m_frontLeft.setDesiredState(swerveModuleStates[0]);
     m_frontRight.setDesiredState(swerveModuleStates[1]);
-    m_backRight.setDesiredState(swerveModuleStates[2]);
-    m_backLeft.setDesiredState(swerveModuleStates[3]);
+    m_backLeft.setDesiredState(swerveModuleStates[2]);
+    m_backRight.setDesiredState(swerveModuleStates[3]);
+
+    
+
+//"formatting"
+    SwerveModuleState[] ActualCurrentSwerveStates ={
+      m_frontLeft.getDesiredState(),
+      m_frontRight.getDesiredState(),
+      m_backLeft.getDesiredState(),
+      m_backRight.getDesiredState()};
+
+    ActualSwervePublisher.set(ActualCurrentSwerveStates);
+    DesiredSwervePublisher.set(swerveModuleStates);
+
+    // NetworkTableInstance.getDefault().getStructArrayTopic(null, null)
+
+
+    
 
     // Output order is Front-Left, Front-Right, Back-Right, Back-Left
   }

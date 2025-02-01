@@ -10,6 +10,7 @@ package frc.robot;
 //import org.opencv.core.Mat;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
@@ -20,9 +21,12 @@ public class Robot extends TimedRobot {
   private final Drivetrain m_swerve = new Drivetrain();
 
   // Slew rate limiters to make joystick inputs more gentle; 1/3 sec from 0 to 1.
-  private final SlewRateLimiter m_xspeedLimiter = new SlewRateLimiter(3);
-  private final SlewRateLimiter m_yspeedLimiter = new SlewRateLimiter(3);
+  private final SlewRateLimiter m_xspeedLimiter = new SlewRateLimiter(4);
+  private final SlewRateLimiter m_yspeedLimiter = new SlewRateLimiter(4);
   private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(3);
+
+  private final LinearFilter xFilter = LinearFilter.singlePoleIIR(0.3, 0.02);
+  private final LinearFilter yFilter = LinearFilter.singlePoleIIR(0.3, 0.02);
 
   @Override
   public void robotInit() {
@@ -40,15 +44,25 @@ public class Robot extends TimedRobot {
 
   @Override
   public void autonomousPeriodic() {
+
     driveWithJoystick(false);
+
     m_swerve.updateOdometry();
+
   }
 
+
+
   @Override
+
   public void teleopPeriodic() {
+
     m_swerve.updateOdometry();
+
     driveWithJoystick(true);
+
     driverControls();
+
   }
 
   private void driveWithJoystick(boolean fieldRelative) {
@@ -56,13 +70,13 @@ public class Robot extends TimedRobot {
     // Get the x speed. We are inverting this because Xbox controllers return
     // negative values when we push forward.
     final var xSpeed =
-        m_xspeedLimiter.calculate(Math.pow(MathUtil.applyDeadband(-m_controller.getLeftY(), 0.15), 3)) * Drivetrain.kMaxSpeed;
-
+    xFilter.calculate(Math.pow(MathUtil.applyDeadband(-m_controller.getLeftY(), 0.15), 3)) * Drivetrain.kMaxSpeed;
+    
     // Get the y speed or sideways/strafe speed. We are inverting this because
     // we want a positive value when we pull to the left. Xbox controllers
     // return positive values when you pull to the right by default.
     final var ySpeed =
-        m_yspeedLimiter.calculate(Math.pow(MathUtil.applyDeadband(-m_controller.getLeftX(), 0.15), 3)) * Drivetrain.kMaxSpeed;
+        yFilter.calculate(Math.pow(MathUtil.applyDeadband(-m_controller.getLeftX(), 0.15), 3)) * Drivetrain.kMaxSpeed;
 
     // Get the rate of angular rotation. We are inverting this because we want a
     // positive value when we pull to the left (remember, CCW is positive in
@@ -73,8 +87,9 @@ public class Robot extends TimedRobot {
     
     // final var rot = Math.atan(-m_controller.getRightY() / m_controller.getRightX());
     double rot = 0;
+    // double rot = MathUtil.applyDeadband(-m_controller.getRightX(), 0.15) * Math.PI / 2;
 
-    rot = Math.atan2(MathUtil.applyDeadband(-m_controller.getRightY(), 0.15), MathUtil.applyDeadband(m_controller.getRightX(), 0.15));
+    //rot = Math.atan2(MathUtil.applyDeadband(-m_controller.getRightY(), 0.15), MathUtil.applyDeadband(m_controller.getRightX(), 0.15));
     
     // if (rot < 0)
     // {
