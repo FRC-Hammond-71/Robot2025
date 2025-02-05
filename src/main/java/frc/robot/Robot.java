@@ -12,6 +12,8 @@ package frc.robot;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -44,8 +46,6 @@ public class Robot extends TimedRobot {
 
   @Override
   public void autonomousPeriodic() {
-
-    driveWithJoystick(false);
 
     m_swerve.updateOdometry();
 
@@ -86,7 +86,10 @@ public class Robot extends TimedRobot {
         // -m_rotLimiter.calculate(MathUtil.applyDeadband(m_controller.getRightX(), 0.1)) * Drivetrain.kMaxAngularSpeed;
     
     // final var rot = Math.atan(-m_controller.getRightY() / m_controller.getRightX());
-    double rot = 0;
+    double rot = MathUtil.applyDeadband(-m_controller.getRightX(), 0.15);
+
+    ChassisSpeeds speeds = new ChassisSpeeds(xSpeed,ySpeed,rot);
+
     // double rot = MathUtil.applyDeadband(-m_controller.getRightX(), 0.15) * Math.PI / 2;
 
     //rot = Math.atan2(MathUtil.applyDeadband(-m_controller.getRightY(), 0.15), MathUtil.applyDeadband(m_controller.getRightX(), 0.15));
@@ -112,7 +115,7 @@ public class Robot extends TimedRobot {
         SmartDashboard.putNumber("xSpeed", xSpeed);
         SmartDashboard.putNumber("ySpeed", ySpeed);
         SmartDashboard.putNumber("rotSpeed", Math.toDegrees(rot));
-    m_swerve.Drive(xSpeed, ySpeed, rot, fieldRelative, getPeriod());
+    m_swerve.Drive(speeds, fieldRelative);
     //m_swerve.Drive(1, 0, 0, fieldRelative, getPeriod());
   }
 
