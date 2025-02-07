@@ -30,8 +30,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 /** Represents a swerve drive style drivetrain. */
 public class Drivetrain {
   private final Field2d m_field = new Field2d();
-  public static final double kMaxSpeed = 1; // 3 meters per second
-  public static final double kMaxAngularSpeed = Math.PI / 2; // 1/2 rotation per second
+  
+  public static final double kMaxSpeed = 2; // 2 meters per second 
+  public static final double kMaxAngularSpeed = Math.PI; // / 2; // 1 rotation per second ;)
 
   private final Translation2d m_frontLeftLocation = new Translation2d(0.381, 0.381);
   private final Translation2d m_frontRightLocation = new Translation2d(0.381, -0.381);
@@ -78,6 +79,8 @@ public class Drivetrain {
     m_gyro.zeroYaw();
     m_headingPID.reset();
     m_headingPID.setSetpoint(0);
+    m_odometry.resetPose(new Pose2d(0,0,Rotation2d.fromDegrees(0)));
+    // isChangingRotationLast = true;
   }
 
   public Drivetrain() {
@@ -131,8 +134,6 @@ public class Drivetrain {
       // the PID setPoint would be "corrupted".
       isChangingRotationLast = false;
     }
-
-    speeds.omegaRadiansPerSecond = 0;
 
     // speeds.omegaRadiansPerSecond = 0;
 
@@ -204,6 +205,10 @@ public class Drivetrain {
 
   public Rotation2d getGyroHeading() {
     return Rotation2d.fromDegrees(-m_gyro.getAngle());
+  }
+
+  public void updateFieldPosition() {
+    m_field.setRobotPose(m_odometry.getPoseMeters());
   }
 
   public void dashboardPrint() {

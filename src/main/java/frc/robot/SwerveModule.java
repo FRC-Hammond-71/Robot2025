@@ -57,7 +57,7 @@ public class SwerveModule
         // this.offset = azimuthOffset;
 
         this.DriveMotor = new SparkMax(driveMotorDeviceId, MotorType.kBrushless);
-        this.DriveMotor.configure(new SparkMaxConfig().idleMode(IdleMode.kBrake), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        this.DriveMotor.configure(new SparkMaxConfig().idleMode(IdleMode.kBrake), ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
      //   this.DriveMotor.setIdleMode(IdleMode.kCoast);
 
        this.AzimuthPID.enableContinuousInput(0, 360);

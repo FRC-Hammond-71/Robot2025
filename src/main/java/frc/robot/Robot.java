@@ -48,6 +48,7 @@ public class Robot extends TimedRobot {
   public void autonomousPeriodic() {
 
     m_swerve.updateOdometry();
+    m_swerve.updateFieldPosition();
 
   }
 
@@ -58,6 +59,7 @@ public class Robot extends TimedRobot {
   public void teleopPeriodic() {
 
     m_swerve.updateOdometry();
+    m_swerve.updateFieldPosition();
 
     driveWithJoystick(true);
 
