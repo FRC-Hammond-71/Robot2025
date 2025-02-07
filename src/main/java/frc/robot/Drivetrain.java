@@ -31,7 +31,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public class Drivetrain {
   private final Field2d m_field = new Field2d();
   
-  public static final double kMaxSpeed = 2; // 2 meters per second 
+  public static final double kMaxSpeed = 3; // 2 meters per second 
   public static final double kMaxAngularSpeed = Math.PI; // / 2; // 1 rotation per second ;)
 
   private final Translation2d m_frontLeftLocation = new Translation2d(0.381, 0.381);

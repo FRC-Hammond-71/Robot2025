@@ -68,17 +68,25 @@ public class Robot extends TimedRobot {
   }
 
   private void driveWithJoystick(boolean fieldRelative) {
+    double overclock = 2;
+    // boolean overclocked;
 
+
+    if (m_controller.getAButton()) {
+      overclock = 3;
+    } else {
+      overclock = 2;
+    }
     // Get the x speed. We are inverting this because Xbox controllers return
     // negative values when we push forward.
     final var xSpeed =
-    xFilter.calculate(Math.pow(MathUtil.applyDeadband(-m_controller.getLeftY(), 0.15), 3)) * Drivetrain.kMaxSpeed;
+    xFilter.calculate(Math.pow(MathUtil.applyDeadband(-m_controller.getLeftY(), 0.15), 3)) * (overclock);
     
     // Get the y speed or sideways/strafe speed. We are inverting this because
     // we want a positive value when we pull to the left. Xbox controllers
     // return positive values when you pull to the right by default.
     final var ySpeed =
-        yFilter.calculate(Math.pow(MathUtil.applyDeadband(-m_controller.getLeftX(), 0.15), 3)) * Drivetrain.kMaxSpeed;
+        yFilter.calculate(Math.pow(MathUtil.applyDeadband(-m_controller.getLeftX(), 0.15), 3)) * overclock;
 
     // Get the rate of angular rotation. We are inverting this because we want a
     // positive value when we pull to the left (remember, CCW is positive in
@@ -123,8 +131,11 @@ public class Robot extends TimedRobot {
 
   private void driverControls() {
     //(reserved for climb))
+    
     if (m_controller.getAButtonPressed()) {
-
+      
+    } else {
+      
     }
     //(reserved for climb)
     if (m_controller.getYButtonPressed()) {
