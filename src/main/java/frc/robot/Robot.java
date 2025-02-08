@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import com.pathplanner.lib.commands.PathPlannerAuto;
+
 //import java.io.Console;
 //import java.lang.ModuleLayer.Controller;
 
@@ -17,6 +19,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
 public class Robot extends TimedRobot {
   private final XboxController m_controller = new XboxController(0);
@@ -38,55 +41,63 @@ public class Robot extends TimedRobot {
   public void robotPeriodic() {
     m_swerve.dashboardPrint();  
     
-    if (m_controller.getYButton()) {
-      this.m_swerve.GyroReset();
-      System.out.println("GYRO RESET");
+    if (m_controller.getYButtonPressed()) 
+    {
+      this.m_swerve.resetPose(FieldPositions.Base);
     }
+  }
+
+  @Override
+  public void disabledInit() {
+    // this.m_swerve.
   }
 
   @Override
   public void autonomousPeriodic() {
 
     m_swerve.updateOdometry();
-    m_swerve.updateFieldPosition();
 
   }
 
+  @Override
+  public void autonomousInit() 
+  {
+    new PathPlannerAuto("Example Auto").schedule();
+    // new PathPlannerAuto("Example Skew Auto").schedule();
+  }
 
+  @Override
+  public void autonomousExit() {
+    CommandScheduler.getInstance().cancelAll();
+  }
 
   @Override
 
   public void teleopPeriodic() {
 
-    m_swerve.updateOdometry();
-    m_swerve.updateFieldPosition();
-
     driveWithJoystick(true);
-
-    driverControls();
-
   }
 
   private void driveWithJoystick(boolean fieldRelative) {
-    double overclock = 2;
+    double overclock = 1;
     // boolean overclocked;
 
 
-    if (m_controller.getAButton()) {
+    if (m_controller.getAButton()) 
+    {
       overclock = 3;
-    } else {
-      overclock = 2;
     }
+
     // Get the x speed. We are inverting this because Xbox controllers return
     // negative values when we push forward.
     final var xSpeed =
-    xFilter.calculate(Math.pow(MathUtil.applyDeadband(-m_controller.getLeftY(), 0.15), 3)) * (overclock);
+      xFilter.calculate(Math.pow(MathUtil.applyDeadband(-m_controller.getLeftY(), 0.05), 3)) * (overclock);
     
     // Get the y speed or sideways/strafe speed. We are inverting this because
     // we want a positive value when we pull to the left. Xbox controllers
     // return positive values when you pull to the right by default.
     final var ySpeed =
-        yFilter.calculate(Math.pow(MathUtil.applyDeadband(-m_controller.getLeftX(), 0.15), 3)) * overclock;
+        yFilter.calculate(Math.pow(MathUtil.applyDeadband(-m_controller.getLeftX(), 0.05), 3)) * overclock;
 
     // Get the rate of angular rotation. We are inverting this because we want a
     // positive value when we pull to the left (remember, CCW is positive in
@@ -95,59 +106,10 @@ public class Robot extends TimedRobot {
     // final var rot =
         // -m_rotLimiter.calculate(MathUtil.applyDeadband(m_controller.getRightX(), 0.1)) * Drivetrain.kMaxAngularSpeed;
     
-    // final var rot = Math.atan(-m_controller.getRightY() / m_controller.getRightX());
-    double rot = MathUtil.applyDeadband(-m_controller.getRightX(), 0.15);
+    double rot = MathUtil.applyDeadband(-m_controller.getRightX(), 0.05);
 
     ChassisSpeeds speeds = new ChassisSpeeds(xSpeed,ySpeed,rot);
 
-    // double rot = MathUtil.applyDeadband(-m_controller.getRightX(), 0.15) * Math.PI / 2;
-
-    //rot = Math.atan2(MathUtil.applyDeadband(-m_controller.getRightY(), 0.15), MathUtil.applyDeadband(m_controller.getRightX(), 0.15));
-    
-    // if (rot < 0)
-    // {
-    //   rot += Math.PI * 2;
-    // }
-
-    // if (m_controller.getAButton()) {
-    //   rot = Math.PI;
-    // }
-    // else  if (m_controller.getXButton()) {
-    //   rot = Math.PI / 2;
-    // }
-    // else  if (m_controller.getBButton()) {
-    //   rot =  (3 * Math.PI) / 2;
-    // }
-    // else {
-    //   rot = 0;
-    // }
-
-        SmartDashboard.putNumber("xSpeed", xSpeed);
-        SmartDashboard.putNumber("ySpeed", ySpeed);
-        SmartDashboard.putNumber("rotSpeed", Math.toDegrees(rot));
     m_swerve.Drive(speeds, fieldRelative);
-    //m_swerve.Drive(1, 0, 0, fieldRelative, getPeriod());
-  }
-
-  private void driverControls() {
-    //(reserved for climb))
-    
-    if (m_controller.getAButtonPressed()) {
-      
-    } else {
-      
-    }
-    //(reserved for climb)
-    if (m_controller.getYButtonPressed()) {
-      m_swerve.GyroReset();
-    }
-    // Open intake X
-    if (m_controller.getXButtonPressed()) {
-      
-    }
-    //  Close intake B
-    if (m_controller.getBButtonPressed()) {
-      
-    }
   }
 }

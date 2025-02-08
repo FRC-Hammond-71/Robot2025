@@ -119,6 +119,11 @@ public class SwerveModule
         SmartDashboard.putNumber("MK4iSwerveModule Drive Voltage", driveVoltage);
     }
 
+    public SwerveModuleState getMeasuredState()
+    {
+        return new SwerveModuleState(this.getDriveVelocity(), this.getAzimuthRotation());
+    }
+
     public SwerveModuleState getDesiredState() {
       return new SwerveModuleState(this.getSpeed(), this.getAzimuthRotation());
     }

@@ -4,6 +4,11 @@
 
 package frc.robot;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.util.PathPlannerLogging;
 import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
 import com.studica.frc.AHRS.NavXUpdateRate;
@@ -21,17 +26,19 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 // import edu.wpi.first.math.trajectory.TrapezoidProfile;
 // import edu.wpi.first.math.trajectory.ExponentialProfile.Constraints;
 // import edu.wpi.first.wpilibj.AnalogGyro;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 /** Represents a swerve drive style drivetrain. */
-public class Drivetrain {
+public class Drivetrain extends SubsystemBase {
   private final Field2d m_field = new Field2d();
   
-  public static final double kMaxSpeed = 3; // 2 meters per second 
+  public static final double kMaxSpeed = 1; // 2 meters per second 
   public static final double kMaxAngularSpeed = Math.PI; // / 2; // 1 rotation per second ;)
 
   private final Translation2d m_frontLeftLocation = new Translation2d(0.381, 0.381);
@@ -74,17 +81,52 @@ public class Drivetrain {
           m_backRight.getPosition()
       });
 
-  public void GyroReset() {
+  public void resetPose(Pose2d initialPose) {
     m_gyro.reset();
     m_gyro.zeroYaw();
     m_headingPID.reset();
-    m_headingPID.setSetpoint(0);
-    m_odometry.resetPose(new Pose2d(0,0,Rotation2d.fromDegrees(0)));
+    m_headingPID.setSetpoint(initialPose.getRotation().getRadians());
+    m_odometry.resetPose(initialPose);
     // isChangingRotationLast = true;
   }
 
   public Drivetrain() {
     SmartDashboard.putData("Field", m_field);
+
+    setupPathPlanner();
+  }
+
+  private void setupPathPlanner()
+  {
+    RobotConfig config;
+    try{
+      config = RobotConfig.fromGUISettings();
+    } catch (Exception e) {
+      // Handle exception as needed
+      e.printStackTrace();
+      return;
+    }
+    AutoBuilder.configure(
+      this::getPose,
+      this::resetPose,
+      this::getRelativeSpeeds,
+      (speeds, f) -> this.Drive(speeds, false),
+      new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
+        new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
+        new PIDConstants(5.0, 0.0, 0.0) // Rotation PID constants
+      ),
+      config,
+      () -> false,
+      this
+    );
+
+    // PathPlannerLogging.setLogCurrentPoseCallback((pose) -> { m_field.setRobotPose(pose); });
+
+    // Logging callback for target robot pose
+    PathPlannerLogging.setLogTargetPoseCallback((pose) -> { m_field.getObject("target pose").setPose(pose); });
+
+    // Logging callback for the active path, this is sent as a list of poses
+    PathPlannerLogging.setLogActivePathCallback((poses) -> { m_field.getObject("path").setPoses(poses); });
   }
 
   /**
@@ -145,14 +187,12 @@ public class Drivetrain {
 
     // final ChassisSpeeds m_cSpeeds = new ChassisSpeeds(xSpeed, ySpeed, 45);
 
-    
     m_field.setRobotPose(m_odometry.getPoseMeters());
 
     speeds = ChassisSpeeds.discretize(speeds, Robot.kDefaultPeriod);
+    speeds = fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(speeds, m_gyro.getRotation2d()) : speeds;
 
-     SwerveModuleState[] swerveModuleStates = m_kinematics.toSwerveModuleStates(fieldRelative 
-      ? ChassisSpeeds.fromFieldRelativeSpeeds(speeds, m_gyro.getRotation2d()) 
-      : speeds);
+    SwerveModuleState[] swerveModuleStates = m_kinematics.toSwerveModuleStates(speeds);
 
     SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, kMaxSpeed);
 
@@ -177,25 +217,43 @@ public class Drivetrain {
     m_backLeft.setDesiredState(swerveModuleStates[2]);
     m_backRight.setDesiredState(swerveModuleStates[3]);
 
-    // "formatting"
-    SwerveModuleState[] ActualCurrentSwerveStates = {
-        m_frontLeft.getDesiredState(),
-        m_frontRight.getDesiredState(),
-        m_backLeft.getDesiredState(),
-        m_backRight.getDesiredState() };
+    ActualSwervePublisher.set(this.getMeasuredModulesStates());
+    DesiredSwervePublisher.set(swerveModuleStates);    
+  }
 
-    ActualSwervePublisher.set(ActualCurrentSwerveStates);
-    DesiredSwervePublisher.set(swerveModuleStates);
+  public SwerveModuleState[] getMeasuredModulesStates()
+  {
+    SwerveModuleState[] measuredSwerveStates = {
+      m_frontLeft.getMeasuredState(),
+      m_frontRight.getMeasuredState(),
+      m_backLeft.getMeasuredState(),
+      m_backRight.getMeasuredState() 
+    };
 
-    // NetworkTableInstance.getDefault().getStructArrayTopic(null, null)
+    return measuredSwerveStates;
+  }
 
-    // Output order is Front-Left, Front-Right, Back-Right, Back-Left
+  public ChassisSpeeds getDesiredSpeeds()
+  {
+    SwerveModuleState[] desiredSwerveStates = {
+      m_frontLeft.getDesiredState(),
+      m_frontRight.getDesiredState(),
+      m_backLeft.getDesiredState(),
+      m_backRight.getDesiredState()
+    };
+
+    return this.m_kinematics.toChassisSpeeds(desiredSwerveStates);
+  }
+
+  public ChassisSpeeds getRelativeSpeeds()
+  {
+    return this.m_kinematics.toChassisSpeeds(this.getMeasuredModulesStates());
   }
 
   /** Updates the field relative position of the robot. */
   public void updateOdometry() {
     m_odometry.update(
-        m_gyro.getRotation2d(), new SwerveModulePosition[] {
+        this.getGyroHeading(), new SwerveModulePosition[] {
             m_frontLeft.getPosition(),
             m_frontRight.getPosition(),
             m_backLeft.getPosition(),
@@ -203,12 +261,14 @@ public class Drivetrain {
         });
   }
 
-  public Rotation2d getGyroHeading() {
+  private Rotation2d getGyroHeading() {
     return Rotation2d.fromDegrees(-m_gyro.getAngle());
   }
 
-  public void updateFieldPosition() {
-    m_field.setRobotPose(m_odometry.getPoseMeters());
+  public Pose2d getPose()
+  {
+    // return this.m_field.getRobotPose();
+    return this.m_odometry.getPoseMeters();
   }
 
   public void dashboardPrint() {
