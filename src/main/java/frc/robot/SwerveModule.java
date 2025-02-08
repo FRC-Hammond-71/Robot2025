@@ -41,7 +41,7 @@ public class SwerveModule
 
     private SparkMax DriveMotor;
     
-    private PIDController AzimuthPID = new PIDController(0.1, 0, 0);
+    private PIDController AzimuthPID = new PIDController(0.08, 0, 0.0005);
 
     private SlewRateLimiter DriveRateLimiter = new SlewRateLimiter(6);
 
@@ -121,7 +121,7 @@ public class SwerveModule
 
     public SwerveModuleState getMeasuredState()
     {
-        return new SwerveModuleState(this.getDriveVelocity(), this.getAzimuthRotation());
+        return new SwerveModuleState(this.getDriveVelocity() / 60, this.getAzimuthRotation());
     }
 
     public SwerveModuleState getDesiredState() {

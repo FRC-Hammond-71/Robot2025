@@ -26,6 +26,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 // import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -38,8 +39,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class Drivetrain extends SubsystemBase {
   private final Field2d m_field = new Field2d();
   
-  public static final double kMaxSpeed = 1; // 2 meters per second 
-  public static final double kMaxAngularSpeed = Math.PI; // / 2; // 1 rotation per second ;)
+
+  public static final double kMaxSpeed = 1; //in mps
+  public static final double kMaxAngularSpeed = Math.PI/2; 
 
   private final Translation2d m_frontLeftLocation = new Translation2d(0.381, 0.381);
   private final Translation2d m_frontRightLocation = new Translation2d(0.381, -0.381);
@@ -53,7 +55,7 @@ public class Drivetrain extends SubsystemBase {
   private boolean isChangingRotationLast = true;
 
   // Lower when we add simple feed forward!!!!!!
-  private final PIDController m_headingPID = new PIDController(0.5, 0, 0);
+  private final PIDController m_headingPID = new PIDController(1.2, 0, 0);
   // private final ProfiledPIDController m_headingPID = new
   // ProfiledPIDController(0.5,0, 0, new TrapezoidProfile.Constraints(Math.PI,
   // Math.PI / 4));[]\
@@ -61,10 +63,20 @@ public class Drivetrain extends SubsystemBase {
   // private final AnalogGyro m_gyro = new AnalogGyro(0);
   private final AHRS m_gyro = new AHRS(NavXComType.kMXP_SPI);
 
+  private StructPublisher<Pose2d> publisher = NetworkTableInstance.getDefault()
+  .getStructTopic("MyPose", Pose2d.struct).publish();
+
+
   public final StructArrayPublisher<SwerveModuleState> ActualSwervePublisher = NetworkTableInstance.getDefault()
       .getStructArrayTopic("ActualStates", SwerveModuleState.struct).publish();
   public final StructArrayPublisher<SwerveModuleState> DesiredSwervePublisher = NetworkTableInstance.getDefault()
       .getStructArrayTopic("DesiredStates", SwerveModuleState.struct).publish();
+
+    public final StructPublisher<ChassisSpeeds> RelativeSpeedsPublisher = NetworkTableInstance.getDefault()
+      .getStructTopic("RelativeSpeeds", ChassisSpeeds.struct).publish();
+    public final StructPublisher<ChassisSpeeds> DesiredRelativeSpeedsPublisher = NetworkTableInstance.getDefault()
+      .getStructTopic("DesiredRelativeSpeeds", ChassisSpeeds.struct).publish();
+
 
   // public final StructArrayPublisher<ChassisSpeeds> ChassisSpeeds =
   // NetworkTableInstance.getDefault()
@@ -93,6 +105,8 @@ public class Drivetrain extends SubsystemBase {
   public Drivetrain() {
     SmartDashboard.putData("Field", m_field);
 
+    this.m_headingPID.setTolerance(4 * (Math.PI / 180));
+
     setupPathPlanner();
   }
 
@@ -110,13 +124,24 @@ public class Drivetrain extends SubsystemBase {
       this::getPose,
       this::resetPose,
       this::getRelativeSpeeds,
-      (speeds, f) -> this.Drive(speeds, false),
+      (speeds) -> this.Drive(speeds, false),
       new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
         new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
-        new PIDConstants(5.0, 0.0, 0.0) // Rotation PID constants
+        new PIDConstants(2.0, 0.0, 0.0) // Rotation PID constants
+
       ),
       config,
-      () -> false,
+      () -> {
+        // Boolean supplier that controls when the path will be mirrored for the red alliance
+        // This will flip the path being followed to the red side of the field.
+        // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+
+        var alliance = DriverStation.getAlliance();
+        if (alliance.isPresent()) {
+          return alliance.get() == DriverStation.Alliance.Red;
+        }
+        return false;
+      },
       this
     );
 
@@ -154,6 +179,9 @@ public class Drivetrain extends SubsystemBase {
       // speeds.omegaRadiansPerSecond = speeds.omegaRadiansPerSecond;
 
       isChangingRotationLast = true;
+
+      SmartDashboard.putNumber("PIDEffort", 0);
+
     } else {
       if (isChangingRotationLast) {
         // Last loop we were rotating from speeds, now we are not! Update our PID
@@ -164,7 +192,7 @@ public class Drivetrain extends SubsystemBase {
 
 
       SmartDashboard.putNumber("PIDSetpoint", Math.toDegrees(m_headingPID.getSetpoint()));
-
+ 
 
       // No input, utilize PID to keep the heading!
       speeds.omegaRadiansPerSecond = m_headingPID.calculate(getGyroHeading().getRadians());
@@ -181,16 +209,11 @@ public class Drivetrain extends SubsystemBase {
 
     // We are still going to clamp the rotation speed!
     speeds.omegaRadiansPerSecond = MathUtil.clamp(speeds.omegaRadiansPerSecond, -kMaxAngularSpeed, kMaxAngularSpeed);
-
-    // this.m_headingPID.enableContinuousInput(0, Math.PI * 2);
-    this.m_headingPID.setTolerance(2 * (Math.PI / 180));
-
-    // final ChassisSpeeds m_cSpeeds = new ChassisSpeeds(xSpeed, ySpeed, 45);
-
-    m_field.setRobotPose(m_odometry.getPoseMeters());
+    speeds.vxMetersPerSecond = MathUtil.clamp(speeds.vxMetersPerSecond, -kMaxSpeed, kMaxSpeed);
+    speeds.vyMetersPerSecond = MathUtil.clamp(speeds.vyMetersPerSecond, -kMaxSpeed, kMaxSpeed);
 
     speeds = ChassisSpeeds.discretize(speeds, Robot.kDefaultPeriod);
-    speeds = fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(speeds, m_gyro.getRotation2d()) : speeds;
+    speeds = fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(speeds, this.getPose().getRotation()) : speeds;
 
     SwerveModuleState[] swerveModuleStates = m_kinematics.toSwerveModuleStates(speeds);
 
@@ -217,8 +240,14 @@ public class Drivetrain extends SubsystemBase {
     m_backLeft.setDesiredState(swerveModuleStates[2]);
     m_backRight.setDesiredState(swerveModuleStates[3]);
 
+    this.updateOdometry();
+    
     ActualSwervePublisher.set(this.getMeasuredModulesStates());
     DesiredSwervePublisher.set(swerveModuleStates);    
+    this.publisher.set(this.getPose());
+    this.RelativeSpeedsPublisher.set(this.getRelativeSpeeds());
+    // this.DesiredRelativeSpeedsPublisher.set(speeds);
+
   }
 
   public SwerveModuleState[] getMeasuredModulesStates()
@@ -245,6 +274,14 @@ public class Drivetrain extends SubsystemBase {
     return this.m_kinematics.toChassisSpeeds(desiredSwerveStates);
   }
 
+  public void Stop() {
+    m_backLeft.Stop();
+    m_backRight.Stop();
+    m_frontLeft.Stop();
+    m_frontRight.Stop();
+    this.m_headingPID.setSetpoint(this.getPose().getRotation().getRadians());
+  }
+
   public ChassisSpeeds getRelativeSpeeds()
   {
     return this.m_kinematics.toChassisSpeeds(this.getMeasuredModulesStates());
@@ -263,7 +300,7 @@ public class Drivetrain extends SubsystemBase {
 
   private Rotation2d getGyroHeading() {
     return Rotation2d.fromDegrees(-m_gyro.getAngle());
-  }
+  } 
 
   public Pose2d getPose()
   {
@@ -276,7 +313,7 @@ public class Drivetrain extends SubsystemBase {
     SmartDashboard.putNumber("FL Rotation", m_frontLeft.getAzimuthRotation().getDegrees());
     SmartDashboard.putNumber("BR Rotation", m_backRight.getAzimuthRotation().getDegrees());
     SmartDashboard.putNumber("BL Rotation", m_backLeft.getAzimuthRotation().getDegrees());
-    SmartDashboard.putNumber("Gyro Heading", this.getGyroHeading().getDegrees());
+    SmartDashboard.putNumber("Heading", this.getPose().getRotation().getDegrees());
     // SmartDashboard.putString("State fr", m_frontRight.getState().toString());
     // SmartDashboard.putString("State fl", m_frontLeft.getState().toString());
     // SmartDashboard.putString("State br", m_backRight.getState().toString());
