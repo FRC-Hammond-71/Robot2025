@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.381,
-        "y": 4.0
+        "x": 3.5565340909090906,
+        "y": 2.717613636363636
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.381,
-        "y": 4.0
+        "x": 0.8879789899313018,
+        "y": 1.5313146307581087
       },
       "isLocked": false,
-      "linkedName": "Base"
+      "linkedName": "R5L"
     },
     {
       "anchor": {
-        "x": 3.7428453947368414,
-        "y": 1.937088815789474
+        "x": 0.6315340909141041,
+        "y": 1.3991477272722466
       },
       "prevControl": {
-        "x": 2.7428453947368414,
-        "y": 1.9370888157894741
+        "x": 2.8745443147508127,
+        "y": 2.41838389392651
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "CSR"
     }
   ],
   "rotationTargets": [],
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 54.16234704572172
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 59.99999999999999
   },
   "useDefaultConstraints": true
 }

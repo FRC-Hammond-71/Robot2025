@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 // import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.SPI;
 //import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -20,6 +21,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.ctre.phoenix6.hardware.CANcoder;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase.ResetMode;
 
@@ -37,7 +39,7 @@ public class SwerveModule
 
     private SparkMax AzimuthMotor;
 
-    private SparkAbsoluteEncoder AbsoluteEncoder;
+    private CANcoder AbsoluteEncoder;
 
     private SparkMax DriveMotor;
     
@@ -45,13 +47,13 @@ public class SwerveModule
 
     private SlewRateLimiter DriveRateLimiter = new SlewRateLimiter(6);
 
-    public SwerveModule(int azimuthMotorDeviceId, int driveMotorDeviceId)
+    public SwerveModule(int azimuthMotorDeviceId, int driveMotorDeviceId, int encoderDeviceId)
     {
         this.AzimuthMotor = new SparkMax(azimuthMotorDeviceId, MotorType.kBrushless);
         // this.AzimuthMotor.setIdleMode(IdleMode.kCoast);
         // this.AzimuthMotor.setInverted(true);
 
-        this.AbsoluteEncoder = this.AzimuthMotor.getAbsoluteEncoder();
+        this.AbsoluteEncoder = new CANcoder(encoderDeviceId);
         // this.AzimuthMotor.getAlternateEncoder()
 
         // this.offset = azimuthOffset;
@@ -66,7 +68,7 @@ public class SwerveModule
 
     public Rotation2d getAzimuthRotation()
     {
-      return Rotation2d.fromRotations(this.AbsoluteEncoder.getPosition());
+      return Rotation2d.fromDegrees(this.AbsoluteEncoder.getAbsolutePosition().getValue().in(Units.Degree));
     }
   
     /**

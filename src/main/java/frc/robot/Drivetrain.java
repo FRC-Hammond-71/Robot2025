@@ -40,7 +40,7 @@ public class Drivetrain extends SubsystemBase {
   private final Field2d m_field = new Field2d();
   
 
-  public static final double kMaxSpeed = 1; //in mps
+  public static final double kMaxSpeed = 1.5; //in mps
   public static final double kMaxAngularSpeed = Math.PI/2; 
 
   private final Translation2d m_frontLeftLocation = new Translation2d(0.381, 0.381);
@@ -48,10 +48,10 @@ public class Drivetrain extends SubsystemBase {
   private final Translation2d m_backLeftLocation = new Translation2d(-0.381, 0.381);
   private final Translation2d m_backRightLocation = new Translation2d(-0.381, -0.381);
 
-  private final SwerveModule m_frontLeft = new SwerveModule(14, 15);
-  private final SwerveModule m_frontRight = new SwerveModule(16, 17);
-  private final SwerveModule m_backLeft = new SwerveModule(12, 13);
-  private final SwerveModule m_backRight = new SwerveModule(10, 11);
+  private final SwerveModule m_frontLeft = new SwerveModule(14, 15, 20);
+  private final SwerveModule m_frontRight = new SwerveModule(16, 17, 21);
+  private final SwerveModule m_backLeft = new SwerveModule(12, 13, 22);
+  private final SwerveModule m_backRight = new SwerveModule(10, 11, 23);
   private boolean isChangingRotationLast = true;
 
   // Lower when we add simple feed forward!!!!!!
