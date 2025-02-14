@@ -1,12 +1,15 @@
 package frc.robot;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 // import edu.wpi.first.math.kinematics.ChassisSpeeds;
 // import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.trajectory.ExponentialProfile.Constraints;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.SPI;
 //import edu.wpi.first.wpilibj.DutyCycleEncoder;
@@ -29,14 +32,14 @@ import com.revrobotics.spark.SparkBase.ResetMode;
 public class SwerveModule
 {
     // Constants of physical Robot]\[]
-    public static final double kAzimuthearing = 150 / 7;
+    public static final double kAzimuthGearing = 150 / 7;
     public static final double kDriveGearing = 6.12f;
     public static final double kDriveCircumference = 0.31919f;
 
 
     // private Rotation2d offset; //offset is in radians and isnt even used rn
-
-
+    TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(400, 400);
+    
     private SparkMax AzimuthMotor;
 
     private CANcoder AbsoluteEncoder;
@@ -44,6 +47,12 @@ public class SwerveModule
     private SparkMax DriveMotor;
     
     private PIDController AzimuthPID = new PIDController(0.08, 0, 0.0005);
+    //new ProfiledPIDController(0.3,0,0.0005, constraints);
+    //
+    
+    
+
+    
 
     private SlewRateLimiter DriveRateLimiter = new SlewRateLimiter(6);
 
@@ -68,7 +77,7 @@ public class SwerveModule
 
     public Rotation2d getAzimuthRotation()
     {
-      return Rotation2d.fromDegrees(this.AbsoluteEncoder.getAbsolutePosition().getValue().in(Units.Degree));
+      return Rotation2d.fromDegrees(this.AbsoluteEncoder.getAbsolutePosition().getValue().in(Units.Degrees));
     }
   
     /**
