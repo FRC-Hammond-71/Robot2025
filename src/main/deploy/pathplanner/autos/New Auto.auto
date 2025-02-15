@@ -7,13 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Base-R4R"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "R4R-CSR"
+            "pathName": "Figure8"
           }
         }
       ]

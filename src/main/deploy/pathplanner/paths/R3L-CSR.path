@@ -16,12 +16,12 @@
     },
     {
       "anchor": {
-        "x": 0.7844095940990138,
-        "y": 1.3591685164943146
+        "x": 0.7644886363636364,
+        "y": 1.3659090909090912
       },
       "prevControl": {
-        "x": 0.9066729029927201,
-        "y": 1.5772320010541145
+        "x": 0.886751945257343,
+        "y": 1.5839725754688918
       },
       "nextControl": null,
       "isLocked": false,
@@ -42,10 +42,10 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 59.99999999999999
+    "rotation": 55.0
   },
   "reversed": false,
-  "folder": " R-CSR",
+  "folder": null,
   "idealStartingState": {
     "velocity": 0,
     "rotation": 180.0

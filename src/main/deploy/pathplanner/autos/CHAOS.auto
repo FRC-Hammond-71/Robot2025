@@ -7,19 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Base-R3L"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "R3L-CSR"
+            "pathName": "New Path"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "Base-R-CSR",
+  "folder": null,
   "choreoAuto": false
 }

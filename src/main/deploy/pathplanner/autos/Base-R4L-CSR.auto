@@ -20,6 +20,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Base-R-CSR",
+  "folder": null,
   "choreoAuto": false
 }

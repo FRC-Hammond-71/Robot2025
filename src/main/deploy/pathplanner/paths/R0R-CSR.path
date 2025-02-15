@@ -8,24 +8,24 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 0.8047156077029514,
-        "y": 1.3657824752075647
+        "x": 2.382102272727273,
+        "y": 3.1164772727272725
       },
       "isLocked": false,
       "linkedName": "R0R"
     },
     {
       "anchor": {
-        "x": 0.7844095940990138,
-        "y": 1.3591685164943146
+        "x": 0.6536931818181819,
+        "y": 1.3991477272727275
       },
       "prevControl": {
-        "x": 3.14965405904059,
-        "y": 3.908675550622694
+        "x": 1.6951704545454545,
+        "y": 2.4960227272727273
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "CSR"
+      "linkedName": null
     }
   ],
   "rotationTargets": [],
@@ -42,10 +42,10 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 59.99999999999999
+    "rotation": 55.0
   },
   "reversed": false,
-  "folder": " R-CSR",
+  "folder": null,
   "idealStartingState": {
     "velocity": 0,
     "rotation": 0.0
