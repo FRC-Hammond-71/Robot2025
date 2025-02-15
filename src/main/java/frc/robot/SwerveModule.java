@@ -38,7 +38,7 @@ public class SwerveModule
 
 
     // private Rotation2d offset; //offset is in radians and isnt even used rn
-    TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(400, 400);
+    //TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(3 * 180, 5 * 180);
     
     private SparkMax AzimuthMotor;
 
@@ -46,10 +46,10 @@ public class SwerveModule
 
     private SparkMax DriveMotor;
     
-    private PIDController AzimuthPID = new PIDController(0.08, 0, 0.0005);
-    //new ProfiledPIDController(0.3,0,0.0005, constraints);
-    //
+    private ProfiledPIDController AzimuthPID = new ProfiledPIDController(0.08, 0, 0.0005, new TrapezoidProfile.Constraints(3 * 180, 5 * 180));
+    //new PIDController(0.08,0,0.0005);
     
+                                                                                                                                                                                                                                                                                                                                                                                                                                        
     
 
     
@@ -100,7 +100,7 @@ public class SwerveModule
         this.AzimuthMotor.stopMotor();
         this.DriveMotor.stopMotor();
         this.DriveRateLimiter.reset(0);
-        this.AzimuthPID.setSetpoint(this.getAzimuthRotation().getDegrees());
+        this.AzimuthPID.setGoal(this.getAzimuthRotation().getDegrees());
     }
 
     public void setDesiredState(SwerveModuleState state) {
