@@ -40,7 +40,7 @@ public class Drivetrain extends SubsystemBase {
   private final Field2d m_field = new Field2d();
   
 
-  public static final double kMaxSpeed = 1.5; //in mps
+  public static final double kMaxSpeed = 3; //in mps
   public static final double kMaxAngularSpeed = Math.PI/2; 
 
   private final Translation2d m_frontLeftLocation = new Translation2d(0.381, 0.381);

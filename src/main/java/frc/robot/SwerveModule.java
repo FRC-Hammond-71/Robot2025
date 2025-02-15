@@ -46,7 +46,7 @@ public class SwerveModule
 
     private SparkMax DriveMotor;
     
-    private ProfiledPIDController AzimuthPID = new ProfiledPIDController(0.08, 0, 0.0005, new TrapezoidProfile.Constraints(3 * 180, 5 * 180));
+    private ProfiledPIDController AzimuthPID = new ProfiledPIDController(0.08, 0, 0.0005, new TrapezoidProfile.Constraints(7 * 180, 6 * 180));
     //new PIDController(0.08,0,0.0005);
     
                                                                                                                                                                                                                                                                                                                                                                                                                                         
@@ -120,7 +120,7 @@ public class SwerveModule
 
         double targetDriveSpeed = this.DriveRateLimiter.calculate(state.speedMetersPerSecond);
 
-        // What is this number? - Aaron][\
+        // What is this number? - Aaron
         
         double driveVoltage = targetDriveSpeed * 2.88f;
 
