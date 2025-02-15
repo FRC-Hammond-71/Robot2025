@@ -3,16 +3,16 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.6294561519833946,
-        "y": 2.9233117360470477
+        "x": 3.9330020468173426,
+        "y": 2.5916855252536903
       },
       "prevControl": null,
       "nextControl": {
-        "x": 0.5556708201251923,
-        "y": 1.3160891925393605
+        "x": 4.628522137861297,
+        "y": 2.775724343552216
       },
       "isLocked": false,
-      "linkedName": "R5L"
+      "linkedName": "R5R"
     },
     {
       "anchor": {
@@ -20,15 +20,20 @@
         "y": 1.3591685164943146
       },
       "prevControl": {
-        "x": 2.958203900062495,
-        "y": 2.5026682539732508
+        "x": 0.36402481529494546,
+        "y": 1.3457459494133368
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": "CSR"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1,
+      "rotationDegrees": 0.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],

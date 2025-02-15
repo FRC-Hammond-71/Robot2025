@@ -3,16 +3,16 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.6294561519833946,
-        "y": 2.9233117360470477
+        "x": 3.1278395987084866,
+        "y": 3.8938231520987086
       },
       "prevControl": null,
       "nextControl": {
-        "x": 0.5556708201251923,
-        "y": 1.3160891925393605
+        "x": 0.8047156077029514,
+        "y": 1.3657824752075647
       },
       "isLocked": false,
-      "linkedName": "R5L"
+      "linkedName": "R0R"
     },
     {
       "anchor": {
@@ -20,8 +20,8 @@
         "y": 1.3591685164943146
       },
       "prevControl": {
-        "x": 2.958203900062495,
-        "y": 2.5026682539732508
+        "x": 3.14965405904059,
+        "y": 3.908675550622694
       },
       "nextControl": null,
       "isLocked": false,
@@ -48,7 +48,7 @@
   "folder": " R-CSR",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 59.99999999999999
+    "rotation": 0.0
   },
   "useDefaultConstraints": true
 }
