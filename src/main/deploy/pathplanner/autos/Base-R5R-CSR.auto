@@ -7,7 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Example Skew Path"
+            "pathName": "Base-R5R"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "R5R-CSR"
           }
         }
       ]
