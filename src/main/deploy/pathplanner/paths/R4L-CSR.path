@@ -45,7 +45,7 @@
     "rotation": 54.16234704572172
   },
   "reversed": false,
-  "folder": " R-CSR",
+  "folder": null,
   "idealStartingState": {
     "velocity": 0,
     "rotation": 119.99999999999999

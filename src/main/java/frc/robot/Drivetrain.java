@@ -55,7 +55,7 @@ public class Drivetrain extends SubsystemBase {
   private boolean isChangingRotationLast = true;
 
   // Lower when we add simple feed forward!!!!!!
-  private final PIDController m_headingPID = new PIDController(1.2, 0, 0);
+  private final PIDController m_headingPID = new PIDController(1.6, 0, 0.005);
   // private final ProfiledPIDController m_headingPID = new
   // ProfiledPIDController(0.5,0, 0, new TrapezoidProfile.Constraints(Math.PI,
   // Math.PI / 4));[]\

@@ -69,7 +69,7 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousInit() 
   {
-    new PathPlannerAuto("Chaospart2")
+    new PathPlannerAuto("Figure8")
       .beforeStarting(Commands.runOnce(() -> System.out.println("We are starting!")))
       .andThen(Commands.runOnce(() -> m_swerve.Stop()))
       .andThen(Commands.runOnce(() -> System.out.println("We are done!")))

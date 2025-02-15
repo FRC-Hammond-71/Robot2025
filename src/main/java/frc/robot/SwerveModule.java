@@ -46,7 +46,7 @@ public class SwerveModule
 
     private SparkMax DriveMotor;
     
-    private ProfiledPIDController AzimuthPID = new ProfiledPIDController(0.08, 0, 0.0005, new TrapezoidProfile.Constraints(7 * 180, 6 * 180));
+    private ProfiledPIDController AzimuthPID = new ProfiledPIDController(0.08, 0, 0.0005, new TrapezoidProfile.Constraints(6 * 180, 8 * 180));
     //new PIDController(0.08,0,0.0005);
     
                                                                                                                                                                                                                                                                                                                                                                                                                                         
