@@ -45,8 +45,9 @@ public class SwerveModule
     private CANcoder AbsoluteEncoder;
 
     private SparkMax DriveMotor;
+  
     
-    private ProfiledPIDController AzimuthPID = new ProfiledPIDController(0.08, 0, 0.0005, new TrapezoidProfile.Constraints(6 * 180, 8 * 180));
+    private ProfiledPIDController AzimuthPID = new ProfiledPIDController(0.08, 0, 0.0005, new TrapezoidProfile.Constraints(8 * 180, 8 * 180));
     //new PIDController(0.08,0,0.0005);
     
                                                                                                                                                                                                                                                                                                                                                                                                                                         
@@ -54,7 +55,7 @@ public class SwerveModule
 
     
 
-    private SlewRateLimiter DriveRateLimiter = new SlewRateLimiter(6);
+    private SlewRateLimiter DriveRateLimiter = new SlewRateLimiter(8);
 
     public SwerveModule(int azimuthMotorDeviceId, int driveMotorDeviceId, int encoderDeviceId)
     {

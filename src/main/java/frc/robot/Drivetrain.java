@@ -15,6 +15,7 @@ import com.studica.frc.AHRS.NavXUpdateRate;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 // import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -85,13 +86,13 @@ public class Drivetrain extends SubsystemBase {
   private final SwerveDriveKinematics m_kinematics = new SwerveDriveKinematics(m_frontLeftLocation,
       m_frontRightLocation, m_backLeftLocation, m_backRightLocation);
 
-  private final SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(m_kinematics, m_gyro.getRotation2d(),
+  private final SwerveDrivePoseEstimator m_odometry = new SwerveDrivePoseEstimator(m_kinematics, m_gyro.getRotation2d(),
       new SwerveModulePosition[] {
           m_frontLeft.getPosition(),
           m_frontRight.getPosition(),
           m_backLeft.getPosition(),
           m_backRight.getPosition()
-      });
+      }, new Pose2d(0,0, new Rotation2d(0)));
 
   public void resetPose(Pose2d initialPose) {
     m_gyro.reset();
@@ -305,7 +306,7 @@ public class Drivetrain extends SubsystemBase {
   public Pose2d getPose()
   {
     // return this.m_field.getRobotPose();
-    return this.m_odometry.getPoseMeters();
+    return this.m_odometry.getEstimatedPosition();
   }
 
   public void dashboardPrint() {
