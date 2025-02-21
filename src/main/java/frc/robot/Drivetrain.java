@@ -12,6 +12,7 @@ import com.pathplanner.lib.util.PathPlannerLogging;
 import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
 import com.studica.frc.AHRS.NavXUpdateRate;
+import com.ctre.phoenix6.hardware.Pigeon2;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
@@ -28,6 +29,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 // import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -62,7 +64,7 @@ public class Drivetrain extends SubsystemBase {
   // Math.PI / 4));[]\
   
   // private final AnalogGyro m_gyro = new AnalogGyro(0);
-  private final AHRS m_gyro = new AHRS(NavXComType.kMXP_SPI);
+  private final Pigeon2 m_gyro = new Pigeon2(30);
 
   private StructPublisher<Pose2d> publisher = NetworkTableInstance.getDefault()
   .getStructTopic("MyPose", Pose2d.struct).publish();
@@ -96,7 +98,6 @@ public class Drivetrain extends SubsystemBase {
 
   public void resetPose(Pose2d initialPose) {
     m_gyro.reset();
-    m_gyro.zeroYaw();
     m_headingPID.reset();
     m_headingPID.setSetpoint(initialPose.getRotation().getRadians());
     m_odometry.resetPose(initialPose);
@@ -300,7 +301,7 @@ public class Drivetrain extends SubsystemBase {
   }
 
   private Rotation2d getGyroHeading() {
-    return Rotation2d.fromDegrees(-m_gyro.getAngle());
+    return Rotation2d.fromDegrees(m_gyro.getYaw().getValue().in(Units.Degrees));
   } 
 
   public Pose2d getPose()
