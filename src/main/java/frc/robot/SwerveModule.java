@@ -16,7 +16,6 @@ import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 // import edu.wpi.first.wpilibj.XboxController;
 
-
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkAbsoluteEncoder;
@@ -28,119 +27,143 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase.ResetMode;
 
+public class SwerveModule {
+	// Constants of physical Robot]\[]
+	public static final double kAzimuthGearing = 150 / 7;
+	public static final double kDriveGearing = 6.12f;
+	public static final double kDriveCircumference = 0.31919f;
 
-public class SwerveModule
-{
-    // Constants of physical Robot]\[]
-    public static final double kAzimuthGearing = 150 / 7;
-    public static final double kDriveGearing = 6.12f;
-    public static final double kDriveCircumference = 0.31919f;
+	// private Rotation2d offset; //offset is in radians and isnt even used rn
+	// TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(3
+	// * 180, 5 * 180);
+
+	private SparkMax AzimuthMotor;
+
+	private CANcoder AbsoluteEncoder;
+
+	private SparkMax DriveMotor;
+
+	// private ProfiledPIDController AzimuthPID = new ProfiledPIDController(0.08, 0,
+	// 0.0005, new TrapezoidProfile.Constraints(12 * 180, 15 * 180));
+	private PIDController AzimuthPID = new PIDController(0.08, 0, 0.0005);
+
+	// Voltage to meters/second
+	private double VoltageToMPS;
+
+	private SlewRateLimiter DriveRateLimiter = new SlewRateLimiter(6);
+
+	private SwerveModuleState lastDesiredState = new SwerveModuleState();
+
+	public SwerveModule(int azimuthMotorDeviceId, int driveMotorDeviceId, int encoderDeviceId, double voltageToMPS) {
+
+		this.VoltageToMPS = voltageToMPS;
+		this.AzimuthMotor = new SparkMax(azimuthMotorDeviceId, MotorType.kBrushless);
+		// this.AzimuthMotor.setIdleMode(IdleMode.kCoast);
+		// this.AzimuthMotor.setInverted(true);
+
+		this.AbsoluteEncoder = new CANcoder(encoderDeviceId);
+		// this.AzimuthMotor.getAlternateEncoder()
 
 
-    // private Rotation2d offset; //offset is in radians and isnt even used rn
-    //TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(3 * 180, 5 * 180);
-    
-    private SparkMax AzimuthMotor;
+		// this.offset = azimuthOffset;
 
-    private CANcoder AbsoluteEncoder;
+		this.DriveMotor = new SparkMax(driveMotorDeviceId, MotorType.kBrushless);
+		this.DriveMotor.configure(new SparkMaxConfig().idleMode(IdleMode.kBrake), ResetMode.kNoResetSafeParameters,
+				PersistMode.kPersistParameters);
+		// this.DriveMotor.setIdleMode(IdleMode.kCoast);
 
-    private SparkMax DriveMotor;
-  
-    
-    private ProfiledPIDController AzimuthPID = new ProfiledPIDController(0.08, 0, 0.0005, new TrapezoidProfile.Constraints(8 * 180, 8 * 180));
-    //new PIDController(0.08,0,0.0005);
-    
-                                                                                                                                                                                                                                                                                                                                                                                                                                        
-    
+		this.AzimuthPID.enableContinuousInput(0, 360);
+		this.AzimuthPID.setTolerance(2);
+	}
 
-    
+	public Rotation2d getAzimuthRotation() {
+		return Rotation2d.fromDegrees(this.AbsoluteEncoder.getAbsolutePosition().getValue().in(Units.Degrees));
+	}
 
-    private SlewRateLimiter DriveRateLimiter = new SlewRateLimiter(8);
+	/**
+	 * @return Velocity in meters per minute.
+	 */
+	public double getDriveVelocity() {
+		return this.DriveMotor.getEncoder().getVelocity() / kDriveGearing * kDriveCircumference;
+	}
 
-    public SwerveModule(int azimuthMotorDeviceId, int driveMotorDeviceId, int encoderDeviceId)
-    {
-        this.AzimuthMotor = new SparkMax(azimuthMotorDeviceId, MotorType.kBrushless);
-        // this.AzimuthMotor.setIdleMode(IdleMode.kCoast);
-        // this.AzimuthMotor.setInverted(true);
+	public SwerveModulePosition getPosition() {
+		double distanceInMeters = this.DriveMotor.getEncoder().getPosition() / kDriveGearing * kDriveCircumference;
 
-        this.AbsoluteEncoder = new CANcoder(encoderDeviceId);
-        // this.AzimuthMotor.getAlternateEncoder()
+		return new SwerveModulePosition(distanceInMeters, this.getAzimuthRotation());
+	}
 
-        // this.offset = azimuthOffset;
+	public void Stop() {
+		this.AzimuthMotor.stopMotor();
+		this.DriveMotor.stopMotor();
+		this.DriveRateLimiter.reset(0);
 
-        this.DriveMotor = new SparkMax(driveMotorDeviceId, MotorType.kBrushless);
-        this.DriveMotor.configure(new SparkMaxConfig().idleMode(IdleMode.kBrake), ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
-     //   this.DriveMotor.setIdleMode(IdleMode.kCoast);
+		final Rotation2d azimuthRotation = this.getAzimuthRotation();
 
-       this.AzimuthPID.enableContinuousInput(0, 360);
-        this.AzimuthPID.setTolerance(2);
-    }
+		this.lastDesiredState = new SwerveModuleState(0, azimuthRotation);
+		this.AzimuthPID.setSetpoint(azimuthRotation.getDegrees());
+	}
 
-    public Rotation2d getAzimuthRotation()
-    {
-      return Rotation2d.fromDegrees(this.AbsoluteEncoder.getAbsolutePosition().getValue().in(Units.Degrees));
-    }
-  
-    /**
-     * @return Velocity in meters per minute.
-     */
-   public double getDriveVelocity()
-    {
-      return this.DriveMotor.getEncoder().getVelocity() / kDriveGearing * kDriveCircumference;
-    }
+	public void setDesiredState(SwerveModuleState state) {
+		// state.optimize();
+		// state = SwerveModuleState.optimize(state, getAzimuthRotation());
 
-    public SwerveModulePosition getPosition()
-    {
-      double distanceInMeters = this.DriveMotor.getEncoder().getPosition() / kDriveGearing * kDriveCircumference;
+		// SmartDashboard.putNumber("%d %d ".format("", null))
 
-      return new SwerveModulePosition(distanceInMeters, this.getAzimuthRotation());
-    }
+		state.speedMetersPerSecond = this.DriveRateLimiter.calculate(state.speedMetersPerSecond);
+		this.lastDesiredState = state;
 
-    public void Stop()
-    {
-        this.AzimuthMotor.stopMotor();
-        this.DriveMotor.stopMotor();
-        this.DriveRateLimiter.reset(0);
-        this.AzimuthPID.setGoal(this.getAzimuthRotation().getDegrees());
-    }
+		double error = this.AzimuthPID.calculate(this.getAzimuthRotation().getDegrees(), state.angle.getDegrees());
 
-    public void setDesiredState(SwerveModuleState state) {
-        // state.optimize();
-        // state = SwerveModuleState.optimize(state, getAzimuthRotation());
+		double controlVoltage = error * 0.95137420707;
 
-        // SmartDashboard.putNumber("%d %d ".format("", null))
+		this.AzimuthMotor.setVoltage(controlVoltage);
 
-        double error = this.AzimuthPID.calculate(this.getAzimuthRotation().getDegrees(), state.angle.getDegrees());
-        
-        double controlVoltage = error * 0.95137420707;
+		SmartDashboard.putNumber("MK4iSwerveModule Azimuth Control", error);
+		SmartDashboard.putNumber("MK4iSwerveModule Azimuth Output Voltage", controlVoltage);
 
-        this.AzimuthMotor.setVoltage(controlVoltage);
+		// What is this number? - Aaron
+		
+		double driveVoltage = state.speedMetersPerSecond * this.VoltageToMPS;
 
-        SmartDashboard.putNumber("MK4iSwerveModule Azimuth Control", error);
-        SmartDashboard.putNumber("MK4iSwerveModule Azimuth Output Voltage", controlVoltage);
+		this.DriveMotor.setVoltage(driveVoltage);
 
-        double targetDriveSpeed = this.DriveRateLimiter.calculate(state.speedMetersPerSecond);
+		SmartDashboard.putNumber("MK4iSwerveModule Drive Control", state.speedMetersPerSecond);
+		SmartDashboard.putNumber("MK4iSwerveModule Drive Voltage", driveVoltage);
+	}
 
-        // What is this number? - Aaron
-        
-        double driveVoltage = targetDriveSpeed * 2.88f;
+	public SwerveModuleState getMeasuredState() {
+		return new SwerveModuleState(this.getDriveVelocity() / 60, this.getAzimuthRotation());
+	}
 
-        this.DriveMotor.setVoltage(driveVoltage);
+	public SwerveModuleState getDesiredState() {
+		return lastDesiredState;
+	}
 
-        SmartDashboard.putNumber("MK4iSwerveModule Drive Control", state.speedMetersPerSecond);
-        SmartDashboard.putNumber("MK4iSwerveModule Drive Voltage", driveVoltage);
-    }
+	public double getSpeed() {
+		return this.DriveMotor.getEncoder().getVelocity() / 60 / kDriveGearing * kDriveCircumference;
+	}
 
-    public SwerveModuleState getMeasuredState()
-    {
-        return new SwerveModuleState(this.getDriveVelocity() / 60, this.getAzimuthRotation());
-    }
+	/**
+	 * Determines if a module may be vaguely loosing contact from the floor. 
+	 * @return True, if the module is predicted to be slipping.
+	 */
+	public boolean isSlipping() 
+	{
+		final double desiredSpeed = this.getDesiredState().speedMetersPerSecond;
+		if (Math.abs(desiredSpeed) < 0.2) {
+			return false;
+		}
 
-    public SwerveModuleState getDesiredState() {
-      return new SwerveModuleState(this.getSpeed(), this.getAzimuthRotation());
-    }
-    
-    public double getSpeed() {
-      return this.DriveMotor.getEncoder().getVelocity()/60/kDriveGearing*kDriveCircumference;
-    }
+		final double measuredSpeed = this.getMeasuredState().speedMetersPerSecond;
+		final double overspeedError = measuredSpeed - desiredSpeed;
+		
+		// Minimum error threshold to prevent noise issues at low speeds
+		final double minAllowedError = 0.2;
+
+		// Allowable error is 25% of desired speed, but at least minAllowedError
+		final double allowedError = Math.max(Math.abs(desiredSpeed) * 0.25, minAllowedError);
+		
+		return overspeedError > allowedError;
+	}
 }

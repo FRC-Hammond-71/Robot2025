@@ -26,108 +26,118 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 
 public class Robot extends TimedRobot {
-  private final XboxController m_controller = new XboxController(0);
-  private final Drivetrain m_swerve = new Drivetrain();
+	private final XboxController m_controller = new XboxController(0);
+	private final Drivetrain m_swerve = new Drivetrain();
+	private final Elevator elevator = new Elevator(40,8,9);
 
-  // Slew rate limiters to make joystick inputs more gentle; 1/3 sec from 0 to 1.
-  private final SlewRateLimiter m_xspeedLimiter = new SlewRateLimiter(4);
-  private final SlewRateLimiter m_yspeedLimiter = new SlewRateLimiter(4);
-  private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(3);
+	// Slew rate limiters to make joystick inputs more gentle; 1/3 sec from 0 to 1.
+	private final SlewRateLimiter m_xspeedLimiter = new SlewRateLimiter(4);
+	private final SlewRateLimiter m_yspeedLimiter = new SlewRateLimiter(4);
+	private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(3);
 
-  private final LinearFilter xFilter = LinearFilter.singlePoleIIR(0.3, 0.02);
-  private final LinearFilter yFilter = LinearFilter.singlePoleIIR(0.3, 0.02);
+	private final LinearFilter xFilter = LinearFilter.singlePoleIIR(0.3, 0.02);
+	private final LinearFilter yFilter = LinearFilter.singlePoleIIR(0.3, 0.02);
 
-  @Override
-  public void robotInit() {
-    
-    this.m_swerve.resetPose(FieldPositions.Base);
-    
-    for (int port = 5800; port <= 5809; port++) {
-    PortForwarder.add(port, "limelight.local", port);
-    }
-  }
-  
-  @Override
-  public void robotPeriodic() {
-    m_swerve.dashboardPrint();  
-    CommandScheduler.getInstance().run();
-    if (m_controller.getYButtonPressed()){
-      this.m_swerve.resetPose(FieldPositions.Base);
-    }
-    Limelight.placedata();
-  }
+	@Override
+	public void robotInit() {
+		this.m_swerve.resetPose(FieldPositions.Base);
 
-  @Override
-  public void disabledInit() {
-    CommandScheduler.getInstance().cancelAll();
-    // this.m_swerve.
-  }
+		for (int port = 5800; port <= 5809; port++) {
+			PortForwarder.add(port, "limelight.local", port);
+		}
+	}
 
-  @Override
-  public void autonomousPeriodic() {
+	@Override
+	public void robotPeriodic() {
+		m_swerve.dashboardPrint();
+		SmartDashboard.putNumber("ElevatorHeight", this.elevator.getHeight());
+		CommandScheduler.getInstance().run();
+		if (m_controller.getYButtonPressed()) {
+			this.m_swerve.resetPose(FieldPositions.Base);
+		}
+		Limelight.placedata();
+	}
 
-    m_swerve.updateOdometry();
+	@Override
+	public void disabledInit() {
+		CommandScheduler.getInstance().cancelAll();
+		// This ensures the robot does not continue to move again after re-enabling!
+		// Clears the drive rate limiter and etc.
+		this.m_swerve.Stop();
+		this.elevator.stop();
+	}
 
-  }
+	@Override
+	public void autonomousPeriodic() {
 
-  @Override
-  public void autonomousInit() 
-  {
-    new PathPlannerAuto("Figure8")
-      .beforeStarting(Commands.runOnce(() -> System.out.println("We are starting!")))
-      .andThen(Commands.runOnce(() -> m_swerve.Stop()))
-      .andThen(Commands.runOnce(() -> System.out.println("We are done!")))
-      .schedule();
-      
+		m_swerve.updateOdometry();
 
-    // new PathPlannerAuto("Example Skew Auto").schedule();
-  }
+	}
 
-  @Override
-  public void autonomousExit() {
-    CommandScheduler.getInstance().cancelAll();
-  }
+	@Override
+	public void autonomousInit() {
+		new PathPlannerAuto("Figure8")
+				.beforeStarting(Commands.runOnce(() -> System.out.println("We are starting!")))
+				.andThen(Commands.runOnce(() -> m_swerve.Stop()))
+				.andThen(Commands.runOnce(() -> System.out.println("We are done!")))
+				.schedule();
 
-  @Override
+		// new PathPlannerAuto("Example Skew Auto").schedule();
+	}
 
-  public void teleopPeriodic() {
+	@Override
+	public void autonomousExit() {
+		CommandScheduler.getInstance().cancelAll();
+	}
 
-    driveWithJoystick(true);
-  }
+	@Override
 
-  private void driveWithJoystick(boolean fieldRelative) {
-    double overclock = 2;
-    // boolean overclocked;
+	public void teleopPeriodic() {
 
+		driveWithJoystick(true);
+	}
 
-    if (m_controller.getAButton()) 
-    {
-      overclock = 3;
-    }
+	private void driveWithJoystick(boolean fieldRelative) {
+		double overclock = 2;
+		// boolean overclocked;
 
+		if (m_controller.getAButton()) {
+			overclock = Drivetrain.kMaxSpeed;
+		}
 
-    // Get the x speed. We are inverting this because Xbox controllers return
-    // negative values when we push forward.
-    final var xSpeed = (m_controller.getPOV() == 0) ? xFilter.calculate(1)*overclock : (m_controller.getPOV() == 180) ? xFilter.calculate(-1)*overclock:  xFilter.calculate(Math.pow(MathUtil.applyDeadband(-m_controller.getLeftY(), 0.10), 3)) * (overclock);
-    
-    // Get the y speed or sideways/strafe speed. We are inverting this because
-    // we want a positive value when we pull to the left. Xbox controllers
-    // return positive values when you pull to the right by default.
-    final var ySpeed =
-        yFilter.calculate(Math.pow(MathUtil.applyDeadband(-m_controller.getLeftX(), 0.1), 3)) * overclock;
+		if (m_controller.getBButton()) {
+			this.elevator.setPositions(ElevatorPositions.L1);
+		}
 
-    // Get the rate of angular rotation. We are inverting this because we want a
-    // positive value when we pull to the left (remember, CCW is positive in
-    // mathematics). Xbox controllers return positive values when you pull to
-    // the right by default.
-    // final var rot =
-        // -m_rotLimiter.calculate(MathUtil.applyDeadband(m_controller.getRightX(), 0.1)) * Drivetrain.kMaxAngularSpeed;
-    
-    double rot = Math.pow(MathUtil.applyDeadband(-m_controller.getRightX(), 0.10), 3);
+		if (m_controller.getXButton()) {
+			this.elevator.setPositions(ElevatorPositions.Stowed);
+		}
 
-    ChassisSpeeds speeds = new ChassisSpeeds(xSpeed,ySpeed,rot);
+		// Get the x speed. We are inverting this because Xbox controllers return
+		// negative values when we push forward.
+		final var xSpeed = (m_controller.getPOV() == 0) ? xFilter.calculate(1) * overclock
+				: (m_controller.getPOV() == 180) ? xFilter.calculate(-1) * overclock
+						: xFilter.calculate(Math.pow(MathUtil.applyDeadband(-m_controller.getLeftY(), 0.10), 3))
+								* (overclock);
 
-    m_swerve.Drive(speeds, fieldRelative);
-  }
+		// Get the y speed or sideways/strafe speed. We are inverting this because
+		// we want a positive value when we pull to the left. Xbox controllers
+		// return positive values when you pull to the right by default.
+		final var ySpeed = yFilter.calculate(Math.pow(MathUtil.applyDeadband(-m_controller.getLeftX(), 0.1), 3))
+				* overclock;
+
+		// Get the rate of angular rotation. We are inverting this because we want a
+		// positive value when we pull to the left (remember, CCW is positive in
+		// mathematics). Xbox controllers return positive values when you pull to
+		// the right by default.
+		// final var rot =
+		// -m_rotLimiter.calculate(MathUtil.applyDeadband(m_controller.getRightX(),
+		// 0.1)) * Drivetrain.kMaxAngularSpeed;
+
+		double rot = Math.pow(MathUtil.applyDeadband(-m_controller.getRightX(), 0.10), 3);
+
+		ChassisSpeeds speeds = new ChassisSpeeds(xSpeed, ySpeed, rot);
+
+		m_swerve.Drive(speeds, fieldRelative);
+	}
 }
-
