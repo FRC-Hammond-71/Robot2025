@@ -44,8 +44,8 @@ import com.revrobotics.spark.SparkBase.ResetMode;
 
 public class Elevator extends SubsystemBase {
 
-    public static final double kMaxHeight = 30;
-    public static final double kMinHeight = 30;
+    public static final double kMaxHeight = 24;
+    public static final double kMinHeight = 5;
 
     public static final double kGearing = 20; 
     public static final double kDiameter = 1.1279;
@@ -55,7 +55,7 @@ public class Elevator extends SubsystemBase {
     
     private ElevatorPositions position = ElevatorPositions.Stowed;
     
-    public SparkAbsoluteEncoder m_encoder;
+    public Encoder m_encoder;
     //hes in my walls
     private final PIDController m_controller = new PIDController(.1,0,0);
     ElevatorFeedforward feedforward = new ElevatorFeedforward(0,0,2,0);
@@ -66,9 +66,10 @@ public class Elevator extends SubsystemBase {
     public Elevator(int driveMotorDeviceId,int encoderDevicePortA,int encoderDevicePortB) {
 
         this.elevatorMotor = new SparkMax(driveMotorDeviceId,MotorType.kBrushless);
-        this.m_encoder = this.elevatorMotor.getAbsoluteEncoder();
+        this.m_encoder = new Encoder(0, 1, true);
+        m_encoder.setDistancePerPulse(0.00048828125);
         // this.m_encoder.setPosition(0);
-
+        
         this.elevatorMotor.configure(new SparkMaxConfig().idleMode(IdleMode.kCoast), ResetMode.kNoResetSafeParameters,
         PersistMode.kPersistParameters);
 
@@ -83,8 +84,8 @@ public class Elevator extends SubsystemBase {
      * @return The current height of the elevator, in inches.
      */
     public double getHeight() 
-    {
-        return m_encoder.getPosition() * kCircumference;
+    {   
+        return this.m_encoder.getDistance() * kCircumference;
     }
 
     public void setPositions(ElevatorPositions position) {
@@ -98,29 +99,39 @@ public class Elevator extends SubsystemBase {
         this.elevatorMotor.stopMotor();
         m_controller.reset();
     };
+
+    public void resetEncoder()
+    {
+        this.m_encoder.reset();
+    };
     
     @Override
     public void periodic() {
         
-        double speed = this.m_encoder.getVelocity() * kCircumference;
-        SmartDashboard.putNumber("Elevator Measured Speed", speed);
+        double speed = this.m_encoder.getDistancePerPulse() * kCircumference;
+        SmartDashboard.putNumber("Encoder Raw Distance", this.m_encoder.getDistance());
 
+        SmartDashboard.putNumber("Elevator Measured Speed", speed);
+        
         SmartDashboard.putNumber("Elevator Height", this.getHeight());
 
         double heightCalculation = m_controller.calculate(this.getHeight(),this.position.getHeight());
-        if (heightCalculation >= kMaxHeight && heightCalculation > 0) {
+        
+        if (this.getHeight() >= kMaxHeight && heightCalculation > 0) {
+            
             this.elevatorMotor.stopMotor();
             return;
         }
 
         SmartDashboard.putNumber("Elevator Desired Speed", heightCalculation);
 
-        if (heightCalculation <= kMinHeight && heightCalculation < 0) {
+        if (this.getHeight() <= kMinHeight && heightCalculation < 0) {
+            
             this.elevatorMotor.stopMotor();
             return;
         }
 
-        // this.elevatorMotor.setVoltage(feedforward.calculate(heightCalculation) * kGearing);
+        this.elevatorMotor.setVoltage(feedforward.calculate(heightCalculation) * kGearing);
         //luynes so cool
 
         super.periodic();

@@ -54,6 +54,7 @@ public class Robot extends TimedRobot {
 		CommandScheduler.getInstance().run();
 		if (m_controller.getYButtonPressed()) {
 			this.m_swerve.resetPose(FieldPositions.Base);
+			this.elevator.resetEncoder();
 		}
 		Limelight.placedata();
 	}
@@ -111,6 +112,14 @@ public class Robot extends TimedRobot {
 
 		if (m_controller.getXButton()) {
 			this.elevator.setPositions(ElevatorPositions.Stowed);
+		}
+
+		if (m_controller.getLeftBumperButton()) {
+			this.elevator.setPositions(ElevatorPositions.L2);
+		}
+
+		if (m_controller.getRightBumperButton()) {
+			this.elevator.setPositions(ElevatorPositions.L3);
 		}
 
 		// Get the x speed. We are inverting this because Xbox controllers return

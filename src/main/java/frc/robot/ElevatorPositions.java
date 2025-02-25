@@ -3,7 +3,10 @@ package frc.robot;
 public enum ElevatorPositions 
 {
     Stowed(0),
-    L1(10);
+    L1(10),
+    L2(13),
+    L3(17),
+    L4(22);
     // TODO: Add more!
     
     private double m_height;
