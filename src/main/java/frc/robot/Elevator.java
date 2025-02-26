@@ -26,6 +26,8 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 // import edu.wpi.first.math.trajectory.ExponentialProfile.Constraints;
 // import edu.wpi.first.wpilibj.AnalogGyro;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 
@@ -54,6 +56,14 @@ public class Elevator extends SubsystemBase {
     public SparkMax elevatorMotor;
     
     private ElevatorPositions position = ElevatorPositions.Stowed;
+
+    public Command RaiseToL1 = Commands.run(() -> this.setPositions(ElevatorPositions.L1), this).until(() -> this.isAtHeight());
+    public Command RaiseToL2 = Commands.run(() -> this.setPositions(ElevatorPositions.L2), this).until(() -> this.isAtHeight());
+    public Command RaiseToL3 = Commands.run(() -> this.setPositions(ElevatorPositions.L3), this).until(() -> this.isAtHeight());
+    public Command RaiseToL4 = Commands.run(() -> this.setPositions(ElevatorPositions.L4), this).until(() -> this.isAtHeight());
+    public Command RaiseToStow = Commands.run(() -> this.setPositions(ElevatorPositions.Stowed), this).until(() -> this.isAtHeight());
+
+
     
     public Encoder m_encoder;
     //hes in my walls
@@ -82,6 +92,7 @@ public class Elevator extends SubsystemBase {
     /**
      * {@code getHeight()}
      * @return The current height of the elevator, in inches.
+     *
      */
     public double getHeight() 
     {   
@@ -99,6 +110,10 @@ public class Elevator extends SubsystemBase {
         this.elevatorMotor.stopMotor();
         m_controller.reset();
     };
+
+    public boolean isAtHeight() {
+        return this.m_controller.atSetpoint();
+    }
 
     public void resetEncoder()
     {

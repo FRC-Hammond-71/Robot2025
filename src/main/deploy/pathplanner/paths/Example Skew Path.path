@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.48108552631578944,
-        "y": 3.9865131578947364
+        "x": 6.4372159090909085,
+        "y": 1.4213068181818187
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.4810855263157894,
-        "y": 3.9865131578947364
+        "x": 7.4372159090909085,
+        "y": 1.4213068181818187
       },
       "isLocked": false,
-      "linkedName": "Base"
+      "linkedName": "test"
     },
     {
       "anchor": {
-        "x": 3.7428453947368414,
-        "y": 1.937088815789474
+        "x": 0.48108552631578944,
+        "y": 3.9865131578947364
       },
       "prevControl": {
-        "x": 2.7428453947368414,
-        "y": 1.9370888157894741
+        "x": -0.5189144736842106,
+        "y": 3.986513157894737
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Base"
     }
   ],
   "rotationTargets": [],
@@ -33,8 +33,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 1.5,
-    "maxAcceleration": 1.0,
+    "maxVelocity": 1.0,
+    "maxAcceleration": 0.5,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -45,7 +45,7 @@
     "rotation": 0.0
   },
   "reversed": false,
-  "folder": null,
+  "folder": "this is stupid or something",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 0.0

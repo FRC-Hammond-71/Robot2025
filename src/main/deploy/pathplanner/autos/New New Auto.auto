@@ -7,19 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Base-R0L"
+            "pathName": "Copy of Example Skew Path"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "RaiseElevatorL1"
+            "name": "RaiseElevatorL2"
           }
         },
         {
           "type": "wait",
           "data": {
-            "waitTime": 5.0
+            "waitTime": 1.0
           }
         },
         {
@@ -31,7 +31,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "R0L-CSL"
+            "pathName": "Example Skew Path"
           }
         }
       ]

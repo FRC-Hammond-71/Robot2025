@@ -42,7 +42,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class Drivetrain extends SubsystemBase {
 	private final Field2d m_field = new Field2d();
 
-	public static final double kMaxSpeed = 4.3; // in mps
+	public static final double kMaxSpeed = 2; // in mps
 	public static final double kMaxAngularSpeed = Math.PI / 2;
 
 	private final Translation2d m_frontLeftLocation = new Translation2d(0.381, 0.381);
@@ -129,7 +129,7 @@ public class Drivetrain extends SubsystemBase {
 				new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for
 												// holonomic drive trains
 						new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
-						new PIDConstants(2.0, 0.0, 0.0) // Rotation PID constants
+						new PIDConstants(5.0, 0.0, 0.0) // Rotation PID constants
 
 				),
 				config,
@@ -172,6 +172,8 @@ public class Drivetrain extends SubsystemBase {
 	 */
 	public void Drive(ChassisSpeeds speeds, boolean fieldRelative) {
 
+		this.updateOdometry();
+
 		// Our strategy to enable rotation is the following:
 		// - Control is not commanding a rotation, keep the current angle!
 		// - Control IS commanding a rotation from speeds.omegaRadiansPerSecond, do not
@@ -199,9 +201,17 @@ public class Drivetrain extends SubsystemBase {
 			SmartDashboard.putNumber("PIDSetpoint", Math.toDegrees(m_headingPID.getSetpoint()));
 
 			// No input, utilize PID to keep the heading!
-			speeds.omegaRadiansPerSecond = m_headingPID.calculate(getGyroHeading().getRadians());
+			double headingKeepValue = m_headingPID.calculate(getGyroHeading().getRadians());
+			if (Math.abs(headingKeepValue) > 4 * (Math.PI / 180))
+			{
+				speeds.omegaRadiansPerSecond = headingKeepValue;
 
-			SmartDashboard.putNumber("PIDEffort", Math.toDegrees(speeds.omegaRadiansPerSecond));
+				SmartDashboard.putNumber("PIDEffort", Math.toDegrees(speeds.omegaRadiansPerSecond));
+			}
+			else
+			{
+				SmartDashboard.putNumber("PIDEffort", 0);
+			}
 
 			// This will prevent setSetpoint running every cycle we don't have an input
 			// (Bad! What if we get hit and rotate?)
@@ -253,6 +263,16 @@ public class Drivetrain extends SubsystemBase {
 		this.RelativeSpeedsPublisher.set(this.getRelativeSpeeds());
 		// this.DesiredRelativeSpeedsPublisher.set(speeds);
 
+	}
+
+	@Override
+	public void periodic() {
+		this.updateOdometry();
+		this.m_frontLeft.update();
+		this.m_frontRight.update();
+		this.m_backLeft.update();
+		this.m_backRight.update();
+		super.periodic();
 	}
 
 	public SwerveModuleState[] getMeasuredModulesStates() {

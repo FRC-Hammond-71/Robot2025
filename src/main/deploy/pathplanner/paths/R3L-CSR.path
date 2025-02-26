@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.937901796010148,
-        "y": 3.878042478666974
+        "x": 5.7502840909090915,
+        "y": 4.0249999999999995
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.265640855630379,
-        "y": 2.077305192001695
+        "x": 7.611647727272728,
+        "y": 2.252272727272727
       },
       "isLocked": false,
       "linkedName": "R3L"
@@ -20,8 +20,8 @@
         "y": 1.3659090909090912
       },
       "prevControl": {
-        "x": 0.886751945257343,
-        "y": 1.5839725754688918
+        "x": 1.4181818181818182,
+        "y": 2.196875
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,8 +33,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 1.5,
-    "maxAcceleration": 1.0,
+    "maxVelocity": 1.0,
+    "maxAcceleration": 0.5,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,

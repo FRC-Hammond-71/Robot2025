@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 
 //import java.io.Console;
@@ -22,6 +23,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 
@@ -42,9 +44,11 @@ public class Robot extends TimedRobot {
 	public void robotInit() {
 		this.m_swerve.resetPose(FieldPositions.Base);
 
-		for (int port = 5800; port <= 5809; port++) {
-			PortForwarder.add(port, "limelight.local", port);
-		}
+		NamedCommands.registerCommand("RaiseElevatorL1",this.elevator.RaiseToL1);
+		NamedCommands.registerCommand("RaiseElevatorL2",this.elevator.RaiseToL2);
+		NamedCommands.registerCommand("RaiseElevatorL3",this.elevator.RaiseToL3);
+		NamedCommands.registerCommand("RaiseElevatorL4",this.elevator.RaiseToL4);
+		NamedCommands.registerCommand("RaiseElevatorStow",this.elevator.RaiseToStow);
 	}
 
 	@Override
@@ -77,7 +81,7 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void autonomousInit() {
-		new PathPlannerAuto("Figure8")
+		new PathPlannerAuto("Base-R3L-CSR")
 				.beforeStarting(Commands.runOnce(() -> System.out.println("We are starting!")))
 				.andThen(Commands.runOnce(() -> m_swerve.Stop()))
 				.andThen(Commands.runOnce(() -> System.out.println("We are done!")))

@@ -43,9 +43,8 @@ public class SwerveModule {
 
 	private SparkMax DriveMotor;
 
-	// private ProfiledPIDController AzimuthPID = new ProfiledPIDController(0.08, 0,
-	// 0.0005, new TrapezoidProfile.Constraints(12 * 180, 15 * 180));
-	private PIDController AzimuthPID = new PIDController(0.08, 0, 0.0005);
+	private ProfiledPIDController AzimuthPID = new ProfiledPIDController(0.08, 0, 0.0005, new TrapezoidProfile.Constraints(12 * 180, 15 * 180));
+	// private PIDController AzimuthPID = new PIDController(0.08, 0, 0.0005);
 
 	// Voltage to meters/second
 	private double VoltageToMPS;
@@ -93,6 +92,7 @@ public class SwerveModule {
 		return new SwerveModulePosition(distanceInMeters, this.getAzimuthRotation());
 	}
 
+
 	public void Stop() {
 		this.AzimuthMotor.stopMotor();
 		this.DriveMotor.stopMotor();
@@ -101,35 +101,29 @@ public class SwerveModule {
 		final Rotation2d azimuthRotation = this.getAzimuthRotation();
 
 		this.lastDesiredState = new SwerveModuleState(0, azimuthRotation);
-		this.AzimuthPID.setSetpoint(azimuthRotation.getDegrees());
+		this.AzimuthPID.reset(azimuthRotation.getDegrees());
 	}
 
-	public void setDesiredState(SwerveModuleState state) {
-		// state.optimize();
-		// state = SwerveModuleState.optimize(state, getAzimuthRotation());
-
-		// SmartDashboard.putNumber("%d %d ".format("", null))
-
+	public void setDesiredState(SwerveModuleState state) 
+	{
+		this.update();
+		
 		state.speedMetersPerSecond = this.DriveRateLimiter.calculate(state.speedMetersPerSecond);
 		this.lastDesiredState = state;
-
-		double error = this.AzimuthPID.calculate(this.getAzimuthRotation().getDegrees(), state.angle.getDegrees());
-
-		double controlVoltage = error * 0.95137420707;
-
-		this.AzimuthMotor.setVoltage(controlVoltage);
-
-		SmartDashboard.putNumber("MK4iSwerveModule Azimuth Control", error);
-		SmartDashboard.putNumber("MK4iSwerveModule Azimuth Output Voltage", controlVoltage);
-
-		// What is this number? - Aaron
 		
 		double driveVoltage = state.speedMetersPerSecond * this.VoltageToMPS;
 
 		this.DriveMotor.setVoltage(driveVoltage);
 
-		SmartDashboard.putNumber("MK4iSwerveModule Drive Control", state.speedMetersPerSecond);
-		SmartDashboard.putNumber("MK4iSwerveModule Drive Voltage", driveVoltage);
+		this.update();
+	}
+
+	public void update() {
+		double error = this.AzimuthPID.calculate(this.getAzimuthRotation().getDegrees(), this.lastDesiredState.angle.getDegrees());
+
+		double controlVoltage = error * 0.95137420707;
+
+		this.AzimuthMotor.setVoltage(controlVoltage);
 	}
 
 	public SwerveModuleState getMeasuredState() {
