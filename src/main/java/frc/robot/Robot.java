@@ -50,7 +50,9 @@ public class Robot extends TimedRobot {
 		NamedCommands.registerCommand("RaiseElevatorL3",this.elevator.RaiseToL3);
 		NamedCommands.registerCommand("RaiseElevatorL4",this.elevator.RaiseToL4);
 		NamedCommands.registerCommand("RaiseElevatorStow",this.elevator.RaiseToStow);
-	}
+		NamedCommands.registerCommand("Score", this.m_arm.ScoreCommand);
+		NamedCommands.registerCommand("Intake", this.m_arm.IntakeCommand);	}
+
 
 	@Override
 	public void robotPeriodic() {
