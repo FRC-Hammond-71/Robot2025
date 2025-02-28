@@ -31,6 +31,7 @@ public class Robot extends TimedRobot {
 	private final XboxController m_controller = new XboxController(0);
 	private final Drivetrain m_swerve = new Drivetrain();
 	private final Elevator elevator = new Elevator(40,8,9);
+	private final Arm m_arm = new Arm(0, 1);
 
 	// Slew rate limiters to make joystick inputs more gentle; 1/3 sec from 0 to 1.
 	private final SlewRateLimiter m_xspeedLimiter = new SlewRateLimiter(4);
@@ -91,6 +92,8 @@ public class Robot extends TimedRobot {
 	}
 
 	@Override
+
+	
 	public void autonomousExit() {
 		CommandScheduler.getInstance().cancelAll();
 	}
@@ -110,21 +113,30 @@ public class Robot extends TimedRobot {
 			overclock = Drivetrain.kMaxSpeed;
 		}
 
-		if (m_controller.getBButton()) {
-			this.elevator.setPositions(ElevatorPositions.L1);
-		}
+	//	if (m_controller.getBButton()) {
+	//		this.elevator.setPositions(ElevatorPositions.L1);
+	//	}
+//
+	//	if (m_controller.getXButton()) {
+	//		this.elevator.setPositions(ElevatorPositions.Stowed);
+	//	}
+//
+	//	if (m_controller.getLeftBumperButton()) {
+	//		this.elevator.setPositions(ElevatorPositions.L2);
+	//	}
+//
+	//	if (m_controller.getRightBumperButton()) {
+	//		this.elevator.setPositions(ElevatorPositions.L3);
+	//	}
 
-		if (m_controller.getXButton()) {
-			this.elevator.setPositions(ElevatorPositions.Stowed);
-		}
-
-		if (m_controller.getLeftBumperButton()) {
-			this.elevator.setPositions(ElevatorPositions.L2);
-		}
-
-		if (m_controller.getRightBumperButton()) {
-			this.elevator.setPositions(ElevatorPositions.L3);
-		}
+	if (m_controller.getXButton()) {
+		//algae intake
+		m_arm.Intake();
+	}
+	if(m_controller.getBButton()) {
+		//algae score
+		m_arm.Score();
+	}
 
 		// Get the x speed. We are inverting this because Xbox controllers return
 		// negative values when we push forward.

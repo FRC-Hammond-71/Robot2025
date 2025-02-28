@@ -3,38 +3,7 @@
   "command": {
     "type": "sequential",
     "data": {
-      "commands": [
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Copy of Example Skew Path"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "RaiseElevatorL2"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 1.0
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "RaiseElevatorStow"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Example Skew Path"
-          }
-        }
-      ]
+      "commands": []
     }
   },
   "resetOdom": true,

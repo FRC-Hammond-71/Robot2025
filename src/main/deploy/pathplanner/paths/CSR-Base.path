@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.2852272727272729,
-        "y": 2.5071022727272725
+        "x": 8.763920454545454,
+        "y": 0.7897727272727275
       },
       "isLocked": false,
       "linkedName": "CSR"
     },
     {
       "anchor": {
-        "x": 0.48108552631578944,
-        "y": 3.9865131578947364
+        "x": 7.587970890410959,
+        "y": 0.8019905821917803
       },
       "prevControl": {
-        "x": 1.0414772727272728,
-        "y": 3.061079545454545
+        "x": 6.912118617681643,
+        "y": 0.8352292185522707
       },
       "nextControl": null,
       "isLocked": false,
@@ -42,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
   "reversed": false,
   "folder": null,

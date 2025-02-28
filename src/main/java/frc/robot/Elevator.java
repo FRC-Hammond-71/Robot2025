@@ -52,6 +52,7 @@ public class Elevator extends SubsystemBase {
     public static final double kGearing = 20; 
     public static final double kDiameter = 1.1279;
     public static final double kCircumference = kDiameter * Math.PI;
+    public static final double distancePerPulse = 0.00048828;
     
     public SparkMax elevatorMotor;
     
@@ -77,7 +78,7 @@ public class Elevator extends SubsystemBase {
 
         this.elevatorMotor = new SparkMax(driveMotorDeviceId,MotorType.kBrushless);
         this.m_encoder = new Encoder(0, 1, true);
-        m_encoder.setDistancePerPulse(0.00048828125);
+        // m_encoder.setDistancePerPulse(0.00048828125);
         // this.m_encoder.setPosition(0);
         
         this.elevatorMotor.configure(new SparkMaxConfig().idleMode(IdleMode.kCoast), ResetMode.kNoResetSafeParameters,
@@ -96,7 +97,7 @@ public class Elevator extends SubsystemBase {
      */
     public double getHeight() 
     {   
-        return this.m_encoder.getDistance() * kCircumference;
+        return this.m_encoder.getDistance() * kCircumference*-1*distancePerPulse;
     }
 
     public void setPositions(ElevatorPositions position) {

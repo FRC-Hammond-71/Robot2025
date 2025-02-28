@@ -25,7 +25,6 @@ public enum PointValues {
     private double p_points;
 
     PointValues(int points) {
-        @param points; //points. dum dum 
         this.p_points = points;
 
     }
