@@ -1,30 +1,80 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Optional;
+
+import javax.swing.text.html.Option;
+
+import org.opencv.core.Mat;
+import org.w3c.dom.NameList;
+
+import edu.wpi.first.math.estimator.PoseEstimator3d;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.LimelightHelpers;
+import frc.robot.LimelightHelpers.PoseEstimate;
 
+public class Limelight extends SubsystemBase {
 
-public class Limelight {
-
-    // These are the crosshair offsets.
-    static NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
-    static NetworkTableEntry tx = table.getEntry("tx");
-    static NetworkTableEntry ty = table.getEntry("ty");
-    static NetworkTableEntry ta = table.getEntry("ta");
+    protected static final HashMap<String, Limelight> RegisteredLimelights = new HashMap<String, Limelight>();
     
-        // read values periodically
-        static double x = tx.getDouble(0.0);
-        static double y = ty.getDouble(0.0);
-        static double area = ta.getDouble(0.0);
+    public final String name;
+    public final Optional<String[]> whitelistedTags;
 
-    // post to smart dashboard periodically
-    public static void placedata() {
-        SmartDashboard.putNumber("LimelightX", x);
-        SmartDashboard.putNumber("LimelightY", y);
-        SmartDashboard.putNumber("LimelightArea", area);
+    //public Rotation2d robotRotation;
+    //public ChassisSpeeds robotSpeeds;
+
+    private Limelight(String name, Optional<String[]> whitelistedTags) {
+
+        this.name = name;
+        this.whitelistedTags = whitelistedTags;
+
+        LimelightHelpers.SetIMUMode(this.name, 1);
+
+    
     }
 
+    public PoseEstimate getPoseEstimate(Rotation2d robotRotation, ChassisSpeeds robotSpeeds) {
+
+        LimelightHelpers.SetRobotOrientation(this.name, robotRotation.getDegrees(), Math.abs(Math.toDegrees(robotSpeeds.omegaRadiansPerSecond)), 0, 0, 0, 0);
+
+        return LimelightHelpers.getBotPoseEstimate_wpiBlue(this.name);
+    }
+
+    public Optional<Pose2d> getFilteredPoseOptional(Rotation2d robotRotation, ChassisSpeeds robotSpeeds) {
+
+        PoseEstimate estimate = this.getPoseEstimate(robotRotation, robotSpeeds);
+
+        if(!estimate.isMegaTag2 || estimate.tagCount < 1 || Math.abs(Math.toDegrees(robotSpeeds.omegaRadiansPerSecond)) > 720) {
+            return Optional.empty();
+        }
+
+        return Optional.of(estimate.pose);
+    }
+
+    public static void registerDevice(String name, Optional<String[]> whitelistedTags) {
+        if (!RegisteredLimelights.containsKey(name)) {
+            RegisteredLimelights.put(name, new Limelight(name, whitelistedTags));
+        }
+    } 
+
+    public static Limelight getDevice(String name) {
+        return RegisteredLimelights.get(name);
+    }
+
+    @Override
+    public void periodic() {
+        SmartDashboard.putNumber("Fiducial ID", LimelightHelpers.getFiducialID(this.name));
+
+        super.periodic();
+    }
 }

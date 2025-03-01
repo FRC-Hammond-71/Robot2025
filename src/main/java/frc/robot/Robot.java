@@ -4,6 +4,9 @@
 
 package frc.robot;
 
+import java.lang.StackWalker.Option;
+import java.util.Optional;
+
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 
@@ -44,6 +47,8 @@ public class Robot extends TimedRobot {
 	@Override
 	public void robotInit() {
 		this.m_swerve.resetPose(FieldPositions.Base);
+		
+		Limelight.registerDevice("Main", Optional.empty());
 
 		NamedCommands.registerCommand("RaiseElevatorL1",this.elevator.RaiseToL1);
 		NamedCommands.registerCommand("RaiseElevatorL2",this.elevator.RaiseToL2);
@@ -61,7 +66,7 @@ public class Robot extends TimedRobot {
 			this.m_swerve.resetPose(FieldPositions.Base);
 			this.elevator.resetEncoder();
 		}
-		Limelight.placedata();
+		
 	}
 
 	@Override
@@ -132,10 +137,15 @@ public class Robot extends TimedRobot {
 	if (m_controller.getXButton()) {
 		//algae intake
 		m_arm.Intake();
+	} else if (!m_controller.getXButton()) {
+		m_arm.Stop();
 	}
+
 	if(m_controller.getBButton()) {
 		//algae score
 		m_arm.Score();
+	} else if (!m_controller.getXButton()) {
+		m_arm.Stop();
 	}
 
 		// Get the x speed. We are inverting this because Xbox controllers return
