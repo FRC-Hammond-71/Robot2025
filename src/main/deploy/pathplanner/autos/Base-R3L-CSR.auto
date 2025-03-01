@@ -11,24 +11,6 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "RaiseElevatorL2"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 3.0
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "RaiseElevatorStow"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "R3L-CSR"

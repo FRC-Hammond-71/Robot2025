@@ -42,7 +42,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class Drivetrain extends SubsystemBase {
 	private final Field2d m_field = new Field2d();
 
-	public static final double kMaxSpeed = 2; // in mps
+	public static final double kMaxSpeed = 3; // in mps
 	public static final double kMaxAngularSpeed = Math.PI / 2;
 
 	private final Translation2d m_frontLeftLocation = new Translation2d(0.381, 0.381);
@@ -99,9 +99,9 @@ public class Drivetrain extends SubsystemBase {
 	public void resetPose(Pose2d initialPose) {
 		m_gyro.reset();
 		m_headingPID.reset();
-		m_headingPID.setSetpoint(initialPose.getRotation().getRadians());
 		m_odometry.resetPose(initialPose);
-		// isChangingRotationLast = true;
+		m_headingPID.setSetpoint(initialPose.getRotation().getRadians());
+		isChangingRotationLast = false;
 	}
 
 	public Drivetrain() {
@@ -201,7 +201,7 @@ public class Drivetrain extends SubsystemBase {
 			SmartDashboard.putNumber("PIDSetpoint", Math.toDegrees(m_headingPID.getSetpoint()));
 
 			// No input, utilize PID to keep the heading!
-			double headingKeepValue = m_headingPID.calculate(getGyroHeading().getRadians());
+			double headingKeepValue = m_headingPID.calculate(this.getPose().getRotation().getRadians());
 			if (Math.abs(headingKeepValue) > 4 * (Math.PI / 180))
 			{
 				speeds.omegaRadiansPerSecond = headingKeepValue;

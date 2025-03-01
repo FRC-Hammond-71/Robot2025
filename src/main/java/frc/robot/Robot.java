@@ -32,9 +32,10 @@ import edu.wpi.first.wpilibj2.command.Commands;
 
 public class Robot extends TimedRobot {
 	private final XboxController m_controller = new XboxController(0);
+	
 	private final Drivetrain m_swerve = new Drivetrain();
-	private final Elevator elevator = new Elevator(40,8,9);
-	private final Arm m_arm = new Arm(0, 1);
+	private final Elevator elevator = new Elevator(40, 8, 9);
+	private final Arm m_arm = new Arm(50, 52, 51);
 
 	// Slew rate limiters to make joystick inputs more gentle; 1/3 sec from 0 to 1.
 	private final SlewRateLimiter m_xspeedLimiter = new SlewRateLimiter(4);
@@ -47,28 +48,30 @@ public class Robot extends TimedRobot {
 	@Override
 	public void robotInit() {
 		this.m_swerve.resetPose(FieldPositions.Base);
-		
+
 		Limelight.registerDevice("Main", Optional.empty());
 
-		NamedCommands.registerCommand("RaiseElevatorL1",this.elevator.RaiseToL1);
-		NamedCommands.registerCommand("RaiseElevatorL2",this.elevator.RaiseToL2);
-		NamedCommands.registerCommand("RaiseElevatorL3",this.elevator.RaiseToL3);
-		NamedCommands.registerCommand("RaiseElevatorL4",this.elevator.RaiseToL4);
-		NamedCommands.registerCommand("RaiseElevatorStow",this.elevator.RaiseToStow);
-		NamedCommands.registerCommand("Score", this.m_arm.ScoreCommand);
-		NamedCommands.registerCommand("Intake", this.m_arm.IntakeCommand);	}
-
+		NamedCommands.registerCommand("RaiseElevatorL1", this.elevator.RaiseToL1);
+		NamedCommands.registerCommand("RaiseElevatorL2", this.elevator.RaiseToL2);
+		NamedCommands.registerCommand("RaiseElevatorL3", this.elevator.RaiseToL3);
+		NamedCommands.registerCommand("RaiseElevatorL4", this.elevator.RaiseToL4);
+		NamedCommands.registerCommand("RaiseElevatorStow", this.elevator.RaiseToStow);
+		NamedCommands.registerCommand("Score", this.m_arm.ScoreAlgaeCommand);
+		NamedCommands.registerCommand("Intake", this.m_arm.IntakeAlgaeCommand);
+		NamedCommands.registerCommand("IntakeCoral", this.m_arm.IntakeCoralCommand);
+		NamedCommands.registerCommand("ScoreCoral", this.m_arm.ScoreCoralCommand);
+	}
 
 	@Override
 	public void robotPeriodic() {
 		m_swerve.dashboardPrint();
 		SmartDashboard.putNumber("ElevatorHeight", this.elevator.getHeight());
+
 		CommandScheduler.getInstance().run();
-		if (m_controller.getYButtonPressed()) {
+		if (m_controller.getRightBumperButton()) {
 			this.m_swerve.resetPose(FieldPositions.Base);
-			this.elevator.resetEncoder();
 		}
-		
+
 	}
 
 	@Override
@@ -100,7 +103,6 @@ public class Robot extends TimedRobot {
 
 	@Override
 
-	
 	public void autonomousExit() {
 		CommandScheduler.getInstance().cancelAll();
 	}
@@ -112,56 +114,59 @@ public class Robot extends TimedRobot {
 		driveWithJoystick(true);
 	}
 
+
 	private void driveWithJoystick(boolean fieldRelative) {
 		double overclock = 2;
 		// boolean overclocked;
 
-		if (m_controller.getAButton()) {
-			overclock = Drivetrain.kMaxSpeed;
+		if (m_controller.getLeftBumperButton()) {
+			overclock = 3;
 		}
 
-	//	if (m_controller.getBButton()) {
-	//		this.elevator.setPositions(ElevatorPositions.L1);
-	//	}
-//
-	//	if (m_controller.getXButton()) {
-	//		this.elevator.setPositions(ElevatorPositions.Stowed);
-	//	}
-//
-	//	if (m_controller.getLeftBumperButton()) {
-	//		this.elevator.setPositions(ElevatorPositions.L2);
-	//	}
-//
-	//	if (m_controller.getRightBumperButton()) {
-	//		this.elevator.setPositions(ElevatorPositions.L3);
-	//	}
+		if (m_controller.getBButton()) {
+			this.m_arm.scoreAlgae();
+		}
+		else if (m_controller.getXButton())
+		{
+			this.m_arm.intakeAlgae();
+		}
+		else {
+			m_arm.stopAlgae();
+		}
 
-	if (m_controller.getXButton()) {
-		//algae intake
-		m_arm.Intake();
-	} else if (!m_controller.getXButton()) {
-		m_arm.Stop();
-	}
+		if (m_controller.getYButton()) {
+			this.m_arm.intakeCoral();
+		} else {
+			this.m_arm.stopCoral();
+		}
 
-	if(m_controller.getBButton()) {
-		//algae score
-		m_arm.Score();
-	} else if (!m_controller.getXButton()) {
-		m_arm.Stop();
-	}
+		if(m_controller.getAButton()) {
+			this.m_arm.scoreCoral();
+		} else {
+			this.m_arm.stopCoral();
+		}
+		
+		 if (m_controller.getPOV() == 90) {
+		 	this.elevator.setPositions(ElevatorPositions.Stowed);
+		 }
+		 if (m_controller.getPOV() == 180) {
+		 	this.elevator.setPositions(ElevatorPositions.L2);
+		 }
+		 if (m_controller.getPOV() == 270) {
+		 	this.elevator.setPositions(ElevatorPositions.L3);
+		 }
+		 if (m_controller.getPOV() == 0) {
+		 	this.elevator.setPositions(ElevatorPositions.L4);
+		 }
 
 		// Get the x speed. We are inverting this because Xbox controllers return
 		// negative values when we push forward.
-		final var xSpeed = (m_controller.getPOV() == 0) ? xFilter.calculate(1) * overclock
-				: (m_controller.getPOV() == 180) ? xFilter.calculate(-1) * overclock
-						: xFilter.calculate(Math.pow(MathUtil.applyDeadband(-m_controller.getLeftY(), 0.10), 3))
-								* (overclock);
+		final var xSpeed = xFilter.calculate(Math.pow(MathUtil.applyDeadband(-m_controller.getLeftY(), 0.10), 3)) * (overclock);
 
 		// Get the y speed or sideways/strafe speed. We are inverting this because
 		// we want a positive value when we pull to the left. Xbox controllers
 		// return positive values when you pull to the right by default.
-		final var ySpeed = yFilter.calculate(Math.pow(MathUtil.applyDeadband(-m_controller.getLeftX(), 0.1), 3))
-				* overclock;
+		final var ySpeed = yFilter.calculate(Math.pow(MathUtil.applyDeadband(-m_controller.getLeftX(), 0.10), 3)) * overclock;
 
 		// Get the rate of angular rotation. We are inverting this because we want a
 		// positive value when we pull to the left (remember, CCW is positive in

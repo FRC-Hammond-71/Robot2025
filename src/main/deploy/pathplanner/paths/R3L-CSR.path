@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.611647727272728,
-        "y": 2.252272727272727
+        "x": 7.362585616438356,
+        "y": 1.7786601027397264
       },
       "isLocked": false,
       "linkedName": "R3L"
@@ -45,7 +45,7 @@
     "rotation": 55.0
   },
   "reversed": false,
-  "folder": "ToCSR",
+  "folder": null,
   "idealStartingState": {
     "velocity": 0,
     "rotation": 180.0
