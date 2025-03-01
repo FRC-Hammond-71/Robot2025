@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.587970890410959,
-        "y": 0.8019905821917803
+        "x": 7.587446307080259,
+        "y": 7.2882344038284135
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.014426694784785,
-        "y": 1.9658955545557026
+        "x": 7.356863636707181,
+        "y": 6.80720635891294
       },
       "isLocked": false,
       "linkedName": "Base"
@@ -20,8 +20,8 @@
         "y": 4.186751902675277
       },
       "prevControl": {
-        "x": 6.362845905927001,
-        "y": 3.308392273640319
+        "x": 6.700656666716442,
+        "y": 5.620867673374888
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,7 +33,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 1.0,
+    "maxVelocity": 2.0,
     "maxAcceleration": 0.5,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -45,7 +45,7 @@
     "rotation": 180.0
   },
   "reversed": false,
-  "folder": null,
+  "folder": "toReefForCoal",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 180.0

@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.006493960447417,
-        "y": 5.348371915359778
+        "x": 5.076578715982472,
+        "y": 5.314837984317344
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.693421052631579,
-        "y": 7.219407894736841
+        "x": 1.7635058081666344,
+        "y": 7.185873963694407
       },
       "isLocked": false,
       "linkedName": "R2R"
@@ -33,7 +33,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 1.0,
+    "maxVelocity": 2.0,
     "maxAcceleration": 0.5,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -45,7 +45,7 @@
     "rotation": -55.0
   },
   "reversed": false,
-  "folder": null,
+  "folder": "ToCSR",
   "idealStartingState": {
     "velocity": 0,
     "rotation": -119.99999999999999
