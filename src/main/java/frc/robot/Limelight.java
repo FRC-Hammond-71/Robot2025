@@ -1,80 +1,71 @@
 package frc.robot;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-
-import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
-import javax.swing.text.html.Option;
-
-import org.opencv.core.Mat;
-import org.w3c.dom.NameList;
-
-import edu.wpi.first.math.estimator.PoseEstimator3d;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.LimelightHelpers;
 import frc.robot.LimelightHelpers.PoseEstimate;
 
-public class Limelight extends SubsystemBase {
+public class Limelight
+{
+    protected static final Map<String, Limelight> RegisteredLimelights = new HashMap<String, Limelight>();
 
-    protected static final HashMap<String, Limelight> RegisteredLimelights = new HashMap<String, Limelight>();
-    
     public final String name;
-    public final Optional<String[]> whitelistedTags;
+    public final Optional<String[]> whitelistedTagIDs;
 
-    //public Rotation2d robotRotation;
-    //public ChassisSpeeds robotSpeeds;
-
-    private Limelight(String name, Optional<String[]> whitelistedTags) {
-
+    private Limelight(String name, Optional<String[]> whitelistedTagIDs)
+    {
         this.name = name;
-        this.whitelistedTags = whitelistedTags;
+        this.whitelistedTagIDs = whitelistedTagIDs;
 
+        // https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-robot-localization-megatag2#imu-modes
         LimelightHelpers.SetIMUMode(this.name, 1);
-
-    
     }
 
-    public PoseEstimate getPoseEstimate(Rotation2d robotRotation, ChassisSpeeds robotSpeeds) {
+    // TODO: Add a method which can use multiple limelights if we use mulitple!
 
-        LimelightHelpers.SetRobotOrientation(this.name, robotRotation.getDegrees(), Math.abs(Math.toDegrees(robotSpeeds.omegaRadiansPerSecond)), 0, 0, 0, 0);
+    public Optional<PoseEstimate> getEstimationResult(Rotation2d robotRot, ChassisSpeeds robotSpeeds)
+    {
+        // We are using MegaTag 2
+        // https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-robot-localization-megatag2
 
-        return LimelightHelpers.getBotPoseEstimate_wpiBlue(this.name);
+        // "MegaTag 2 provides excellent results at any distance given a single tag. 
+        // This means it is perfectly viable to focus only on tags that are both relevant and within tolerance, and filter out all other tags
+        // If a tag is not in the correct location, filter it out with the dynamic filter feature introduced alongside MegaTag2."
+
+        LimelightHelpers.SetRobotOrientation(this.name, robotRot.getDegrees(), Math.toDegrees(robotSpeeds.omegaRadiansPerSecond), 0, 0, 0, 0);
+
+        PoseEstimate es = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(this.name);
+        return Optional.ofNullable(es);
     }
 
-    public Optional<Pose2d> getFilteredPoseOptional(Rotation2d robotRotation, ChassisSpeeds robotSpeeds) {
+    public Optional<Pose2d> getFilteredEstimatedPose(Rotation2d robotRot, ChassisSpeeds robotSpeeds)
+    {
+        Optional<PoseEstimate> es = this.getEstimationResult(robotRot, robotSpeeds);
+        if (es.isEmpty()) return Optional.empty();
 
-        PoseEstimate estimate = this.getPoseEstimate(robotRotation, robotSpeeds);
-
-        if(!estimate.isMegaTag2 || estimate.tagCount < 1 || Math.abs(Math.toDegrees(robotSpeeds.omegaRadiansPerSecond)) > 720) {
+        if (!es.get().isMegaTag2 || es.get().tagCount < 1 || Math.abs(Math.toDegrees(robotSpeeds.omegaRadiansPerSecond)) > 720)
+        {
             return Optional.empty();
         }
-
-        return Optional.of(estimate.pose);
+        return Optional.of(es.get().pose);
     }
 
-    public static void registerDevice(String name, Optional<String[]> whitelistedTags) {
-        if (!RegisteredLimelights.containsKey(name)) {
-            RegisteredLimelights.put(name, new Limelight(name, whitelistedTags));
+    public static void registerDevice(String name, Optional<String[]> whitelistedTagIDs)
+    {
+        if (RegisteredLimelights.containsKey(name))
+        {
+            // Already registered, do nothing.
+            return;
         }
-    } 
-
-    public static Limelight getDevice(String name) {
-        return RegisteredLimelights.get(name);
+        RegisteredLimelights.put(name, new Limelight(name, whitelistedTagIDs));
     }
 
-    @Override
-    public void periodic() {
-        SmartDashboard.putNumber("Fiducial ID", LimelightHelpers.getFiducialID(this.name));
-
-        super.periodic();
+    public static Limelight useDevice(String name)
+    {
+        return RegisteredLimelights.get(name);
     }
 }

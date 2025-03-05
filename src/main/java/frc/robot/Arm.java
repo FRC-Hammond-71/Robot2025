@@ -4,6 +4,10 @@ import org.dyn4j.geometry.Rotation;
 
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.SparkBase.PersistMode;
+import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
@@ -18,7 +22,7 @@ import edu.wpi.first.math.controller.PIDController;
 
 public class Arm extends SubsystemBase {
 
-    public static final double kGearing = (17 / 3) * (15 / 4) * (20 / 7);
+    public static final double kGearing = (17 / 3) * (15 / 4) * (52 / 14);
     public static final Rotation2d kMaxRotation = Rotation2d.fromDegrees(180);
     public static final Rotation2d kMinRotation = Rotation2d.fromDegrees(0);
 
@@ -37,15 +41,25 @@ public class Arm extends SubsystemBase {
         this.algaeMotor = new SparkMax(algaeMotorDeviceID, MotorType.kBrushless);
         this.absoluteEncoder = rotationMotor.getAbsoluteEncoder();
         this.targetRotation = new Rotation2d(); // In degrees goofy :)
-        this.feedforward = new ArmFeedforward(0, 0, 3, 0);
-        this.PID = new ProfiledPIDController(.1, 0, 0, new Constraints(30, 5));
+        this.feedforward = new ArmFeedforward(0, 0.5, 2, 0);
+        this.PID = new ProfiledPIDController(1.5, 0, 0.0005, new Constraints(Math.PI / 2, Math.PI / 6));
 
+        this.rotationMotor.configure(new SparkMaxConfig().idleMode(IdleMode.kBrake), ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
     }
 
     public Command ScoreAlgaeCommand = Commands.run(() -> this.scoreAlgae(), this);
     public Command IntakeAlgaeCommand = Commands.run(() -> this.intakeAlgae(), this);
     public Command IntakeCoralCommand = Commands.run(() -> this.intakeCoral(), this);
     public Command ScoreCoralCommand = Commands.run(() -> this.scoreCoral(), this);
+
+    public void stop()
+    {
+        this.rotationMotor.stopMotor();
+        this.PID.reset(this.getRotation().getRadians());
+        this.PID.setGoal(this.getRotation().getRadians());
+        this.algaeMotor.stopMotor();
+        this.coralMotor.stopMotor();
+    }
 
     public void intakeCoral() {
         this.coralMotor.set(-0.5);
@@ -76,25 +90,42 @@ public class Arm extends SubsystemBase {
     }
 
     public Rotation2d getRotation() {
-        return Rotation2d.fromDegrees(this.absoluteEncoder.getPosition() * 360);
+        double rot = this.absoluteEncoder.getPosition() * 360;
+        rot = rot >= 0 ? rot : (360 + rot);
+        rot += 1;
+
+        if (rot > 358)
+        {
+            rot = 0;
+        }
+
+        return Rotation2d.fromDegrees(rot);
     }
-    
 
     @Override
-    public void periodic() 
-    {
-        // double PIDEffort = PID.calculate(this.getRotation().getDegrees(), this.targetRotation.getDegrees());
+    public void periodic() {
 
-        // if (getRotation().getDegrees() >= kMaxRotation.getDegrees() && PIDEffort > 0) {
+        SmartDashboard.putNumber("Arm Target", this.targetRotation.getDegrees());
+        SmartDashboard.putNumber("Arm Current", this.getRotation().getDegrees());
+        // System.out.println(this.getRotation().getDegrees());
+        double PIDEffort = PID.calculate(this.getRotation().getRadians(), this.targetRotation.getRadians());
+        if (getRotation().getDegrees() >= kMaxRotation.getDegrees() && PIDEffort > 0) 
+        {
+            this.rotationMotor.stopMotor();
+            return;
+        }
 
-        //     this.rotationMotor.stopMotor();
-        //     return;
-        // }
-        // if (getRotation().getDegrees() <= kMaxRotation.getDegrees() && PIDEffort < 0) {
+        if (getRotation().getDegrees() <= kMinRotation.getDegrees() && PIDEffort < 0)
+        {
+            this.rotationMotor.stopMotor();
+            return;
+        }
 
-        //     this.rotationMotor.stopMotor();
-        //     return;
-        // }
-        // this.rotationMotor.setVoltage(feedforward.calculate(getRotation().getRadians()-Math.PI/2, PIDEffort));
+        SmartDashboard.putNumber("Arm Control Speed", PIDEffort);
+        SmartDashboard.putNumber("Arm Measured Speed", this.absoluteEncoder.getVelocity() * 360);
+
+        SmartDashboard.putNumber("Arm Voltage", feedforward.calculate(getRotation().getRadians()-Math.PI/2, PIDEffort));
+
+        this.rotationMotor.setVoltage(-feedforward.calculate(getRotation().getRadians()-Math.PI/2, PIDEffort));
     }
 }

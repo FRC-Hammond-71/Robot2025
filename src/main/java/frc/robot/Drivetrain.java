@@ -12,6 +12,9 @@ import com.pathplanner.lib.util.PathPlannerLogging;
 import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
 import com.studica.frc.AHRS.NavXUpdateRate;
+
+import java.util.Optional;
+
 import com.ctre.phoenix6.hardware.Pigeon2;
 
 import edu.wpi.first.math.MathUtil;
@@ -31,12 +34,14 @@ import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 // import edu.wpi.first.math.trajectory.TrapezoidProfile;
 // import edu.wpi.first.math.trajectory.ExponentialProfile.Constraints;
 // import edu.wpi.first.wpilibj.AnalogGyro;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.LimelightHelpers.PoseEstimate;
 
 /** Represents a swerve drive style drivetrain. */
 public class Drivetrain extends SubsystemBase {
@@ -70,6 +75,15 @@ public class Drivetrain extends SubsystemBase {
 	private StructPublisher<Pose2d> publisher = NetworkTableInstance.getDefault()
 			.getStructTopic("MyPose", Pose2d.struct).publish();
 
+			private StructPublisher<Pose2d> wpublisher = NetworkTableInstance.getDefault()
+			.getStructTopic("MyPoseWWWWW", Pose2d.struct).publish();
+
+	private StructPublisher<Pose2d> llFilteredPosePublisher = NetworkTableInstance.getDefault()
+		.getStructTopic("llFilteredPose", Pose2d.struct).publish();
+
+	private StructPublisher<Pose2d> llNonFilteredPosePublisher = NetworkTableInstance.getDefault()
+		.getStructTopic("llNonFilteredPose", Pose2d.struct).publish();
+
 	public final StructArrayPublisher<SwerveModuleState> ActualSwervePublisher = NetworkTableInstance.getDefault()
 			.getStructArrayTopic("ActualStates", SwerveModuleState.struct).publish();
 	public final StructArrayPublisher<SwerveModuleState> DesiredSwervePublisher = NetworkTableInstance.getDefault()
@@ -97,16 +111,19 @@ public class Drivetrain extends SubsystemBase {
 			}, new Pose2d(0, 0, new Rotation2d(0)));
 
 	public void resetPose(Pose2d initialPose) {
-		m_gyro.reset();
+		// Reset gyro to zero
+		// m_gyro.reset();
+		// Reset PID values to zero (including the set-point!)
 		m_headingPID.reset();
 		m_odometry.resetPose(initialPose);
 		m_headingPID.setSetpoint(initialPose.getRotation().getRadians());
-		isChangingRotationLast = false;
+		isChangingRotationLast = true;
 	}
 
 	public Drivetrain() {
 		SmartDashboard.putData("Field", m_field);
 
+		this.m_headingPID.enableContinuousInput(-Math.PI, Math.PI);
 		this.m_headingPID.setTolerance(4 * (Math.PI / 180));
 
 		setupPathPlanner();
@@ -179,51 +196,33 @@ public class Drivetrain extends SubsystemBase {
 		// - Control IS commanding a rotation from speeds.omegaRadiansPerSecond, do not
 		// use PID.
 		final boolean isUserChangingRotation = speeds.omegaRadiansPerSecond != 0;
-
-		SmartDashboard.putBoolean("ChangingRot", isUserChangingRotation);
-
-		if (isUserChangingRotation) {
+		if (isUserChangingRotation) 
+		{
 			// We do not modify this input, this enables an instant-response to fine-control
 			// unlike a PID loop.
 			// speeds.omegaRadiansPerSecond = speeds.omegaRadiansPerSecond;
 
 			isChangingRotationLast = true;
-
-			SmartDashboard.putNumber("PIDEffort", 0);
-
-		} else {
-			if (isChangingRotationLast) {
-				// Last loop we were rotating from speeds, now we are not! Update our PID
-				// setpoint to current angle ONCE.
-				m_headingPID.setSetpoint(getGyroHeading().getRadians());
+		} 
+		else 
+		{
+			if (isChangingRotationLast) 
+			{
+				m_headingPID.setSetpoint(this.getPose().getRotation().getRadians());
 			}
-
-			SmartDashboard.putNumber("PIDSetpoint", Math.toDegrees(m_headingPID.getSetpoint()));
+			wpublisher.set(new Pose2d(this.getPose().getTranslation(), Rotation2d.fromRadians(this.m_headingPID.getSetpoint())));
 
 			// No input, utilize PID to keep the heading!
 			double headingKeepValue = m_headingPID.calculate(this.getPose().getRotation().getRadians());
 			if (Math.abs(headingKeepValue) > 4 * (Math.PI / 180))
 			{
 				speeds.omegaRadiansPerSecond = headingKeepValue;
-
-				SmartDashboard.putNumber("PIDEffort", Math.toDegrees(speeds.omegaRadiansPerSecond));
 			}
-			else
-			{
-				SmartDashboard.putNumber("PIDEffort", 0);
-			}
-
-			// This will prevent setSetpoint running every cycle we don't have an input
-			// (Bad! What if we get hit and rotate?)
-			// the PID setPoint would be "corrupted".
 			isChangingRotationLast = false;
 		}
 
-		// speeds.omegaRadiansPerSecond = 0;
-
 		// We are still going to clamp the rotation speed!
-		speeds.omegaRadiansPerSecond = MathUtil.clamp(speeds.omegaRadiansPerSecond, -kMaxAngularSpeed,
-				kMaxAngularSpeed);
+		speeds.omegaRadiansPerSecond = MathUtil.clamp(speeds.omegaRadiansPerSecond, -kMaxAngularSpeed, kMaxAngularSpeed);
 		speeds.vxMetersPerSecond = MathUtil.clamp(speeds.vxMetersPerSecond, -kMaxSpeed, kMaxSpeed);
 		speeds.vyMetersPerSecond = MathUtil.clamp(speeds.vyMetersPerSecond, -kMaxSpeed, kMaxSpeed);
 
@@ -248,8 +247,6 @@ public class Drivetrain extends SubsystemBase {
 		swerveModuleStates[3].speedMetersPerSecond *= swerveModuleStates[3].angle
 				.minus(this.m_backRight.getAzimuthRotation()).getCos();
 
-		// SwerveModuleState[] swerveModuleStates =
-		// m_kinematics.toSwerveModuleStates(new ChassisSpeeds(xSpeed, ySpeed, rot));
 		m_frontLeft.setDesiredState(swerveModuleStates[0]);
 		m_frontRight.setDesiredState(swerveModuleStates[1]);
 		m_backLeft.setDesiredState(swerveModuleStates[2]);
@@ -261,8 +258,6 @@ public class Drivetrain extends SubsystemBase {
 		DesiredSwervePublisher.set(swerveModuleStates);
 		this.publisher.set(this.getPose());
 		this.RelativeSpeedsPublisher.set(this.getRelativeSpeeds());
-		// this.DesiredRelativeSpeedsPublisher.set(speeds);
-
 	}
 
 	@Override
@@ -277,12 +272,11 @@ public class Drivetrain extends SubsystemBase {
 
 	public SwerveModuleState[] getMeasuredModulesStates() {
 		SwerveModuleState[] measuredSwerveStates = {
-				m_frontLeft.getMeasuredState(),
-				m_frontRight.getMeasuredState(),
-				m_backLeft.getMeasuredState(),
-				m_backRight.getMeasuredState()
+			m_frontLeft.getMeasuredState(),
+			m_frontRight.getMeasuredState(),
+			m_backLeft.getMeasuredState(),
+			m_backRight.getMeasuredState()
 		};
-
 		return measuredSwerveStates;
 	}
 
@@ -293,8 +287,11 @@ public class Drivetrain extends SubsystemBase {
 				m_backLeft.getDesiredState(),
 				m_backRight.getDesiredState()
 		};
-
 		return this.m_kinematics.toChassisSpeeds(desiredSwerveStates);
+	}
+
+	public ChassisSpeeds getMeasuredSpeeds() {
+		return this.m_kinematics.toChassisSpeeds(this.getMeasuredModulesStates());
 	}
 
 	public void Stop() {
@@ -317,6 +314,23 @@ public class Drivetrain extends SubsystemBase {
 			m_backLeft.getPosition(),
 			m_backRight.getPosition()
 		});
+
+		Rotation2d gyroHeading = this.getGyroHeading();
+		ChassisSpeeds speeds = this.getMeasuredSpeeds();
+
+		// TODO: Maybe change with the local-odometry heading?
+		Optional<PoseEstimate> unFilteredResult = Limelight.useDevice("Limelight").getEstimationResult(gyroHeading, speeds);
+		Optional<Pose2d> filteredPose = Limelight.useDevice("Limelight").getFilteredEstimatedPose(gyroHeading, speeds);
+
+		if (unFilteredResult.isPresent())
+		{
+			this.llNonFilteredPosePublisher.set(unFilteredResult.get().pose);
+		}
+		if (filteredPose.isPresent())
+		{
+			this.llFilteredPosePublisher.set(filteredPose.get());
+			this.m_odometry.addVisionMeasurement(filteredPose.get(), Timer.getFPGATimestamp());
+		}
 	}
 
 	private Rotation2d getGyroHeading() {

@@ -70,8 +70,8 @@ public class Elevator extends SubsystemBase {
 
     public Encoder m_encoder;
     // hes in my walls
-    private final PIDController PID = new PIDController(0.1, 0, 0);
-    ElevatorFeedforward feedforward = new ElevatorFeedforward(0, 0, 0.2, 0);
+    private final PIDController PID = new PIDController(0.2, 0, 0.0005);
+    ElevatorFeedforward feedforward = new ElevatorFeedforward(0, 0, 0.4, 0);
 
     // Then, use .getHeight() on any values to get the larget height of each enum
     // value.
