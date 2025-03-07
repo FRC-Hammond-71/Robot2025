@@ -33,7 +33,11 @@ public class Robot extends TimedRobot {
 
 	private final Drivetrain m_swerve = new Drivetrain();
 	private final XboxController m_controller = new XboxController(0);
+<<<<<<< HEAD
 	//private final Controller m_controllers;
+=======
+	private final Controller m_controllers = new Controller("Driver", 0);
+>>>>>>> 2d3ed2b06dcf2a3ffd5ab21b26610842e9ceb6bc
 	private final Elevator elevator = new Elevator(40, 8, 9);
 	private final Arm m_arm = new Arm(50, 52, 51);
 
@@ -119,6 +123,7 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void teleopPeriodic() {
+<<<<<<< HEAD
 		driveWithJoystick(true);
 	}
 
@@ -221,3 +226,8 @@ public class Robot extends TimedRobot {
 		m_swerve.Drive(speeds, fieldRelative);
 	}
 }
+=======
+		m_controllers.Drive();
+	}
+}
+>>>>>>> 2d3ed2b06dcf2a3ffd5ab21b26610842e9ceb6bc
