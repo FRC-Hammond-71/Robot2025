@@ -16,16 +16,16 @@
     },
     {
       "anchor": {
-        "x": 0.6536931818181819,
-        "y": 1.3991477272727275
+        "x": 0.7644886363636364,
+        "y": 1.3659090909090912
       },
       "prevControl": {
-        "x": 1.6951704545454545,
-        "y": 2.4960227272727273
+        "x": 1.8059659090909088,
+        "y": 2.462784090909091
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "CSR"
     }
   ],
   "rotationTargets": [],
@@ -33,8 +33,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.0,
-    "maxAcceleration": 0.5,
+    "maxVelocity": 0.8,
+    "maxAcceleration": 1.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -45,7 +45,7 @@
     "rotation": 55.0
   },
   "reversed": false,
-  "folder": "ToCSR",
+  "folder": null,
   "idealStartingState": {
     "velocity": 0,
     "rotation": 0.0

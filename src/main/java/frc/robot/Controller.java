@@ -80,16 +80,16 @@
 //         }
 
 //         if (m_controller.getPOV() == 90) {
-//             this.elevator.setPositions(ElevatorPositions.Stowed);
+//             this.elevator.setPositions(ElevatorPosition.Stowed);
 //         }
 //         if (m_controller.getPOV() == 180) {
-//             this.elevator.setPositions(ElevatorPositions.L2);
+//             this.elevator.setPositions(ElevatorPosition.L2);
 //         }
 //         if (m_controller.getPOV() == 270) {
-//             this.elevator.setPositions(ElevatorPositions.L3);
+//             this.elevator.setPositions(ElevatorPosition.L3);
 //         }
 //         if (m_controller.getPOV() == 0) {
-//             this.elevator.setPositions(ElevatorPositions.L4);
+//             this.elevator.setPositions(ElevatorPosition.L4);
 //         }
 
 //     }

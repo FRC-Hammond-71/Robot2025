@@ -13,6 +13,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -41,7 +42,7 @@ public class Arm extends SubsystemBase {
         this.algaeMotor = new SparkMax(algaeMotorDeviceID, MotorType.kBrushless);
         this.absoluteEncoder = rotationMotor.getAbsoluteEncoder();
         this.targetRotation = new Rotation2d(); // In degrees goofy :)
-        this.feedforward = new ArmFeedforward(0, 0.5, 2, 0);
+        this.feedforward = new ArmFeedforward(0, 0.8, 2, 0);
         this.PID = new ProfiledPIDController(1.5, 0, 0.0005, new Constraints(Math.PI / 2, Math.PI / 6));
 
         this.rotationMotor.configure(new SparkMaxConfig().idleMode(IdleMode.kBrake), ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
@@ -54,27 +55,28 @@ public class Arm extends SubsystemBase {
 
     public void stop()
     {
+        stopAlgae();
+        stopCoral();
         this.rotationMotor.stopMotor();
         this.PID.reset(this.getRotation().getRadians());
         this.PID.setGoal(this.getRotation().getRadians());
-        this.algaeMotor.stopMotor();
-        this.coralMotor.stopMotor();
     }
 
     public void intakeCoral() {
-        this.coralMotor.set(-0.5);
+        this.coralMotor.set(-0.8);
     }
 
     public void scoreCoral() {
-        this.coralMotor.set(0.5);
+        this.coralMotor.set(0.8);
     }
 
+
     public void intakeAlgae() {
-        this.algaeMotor.set(-0.5);
+        this.algaeMotor.set(-1);
     }
 
     public void scoreAlgae() {
-        this.algaeMotor.set(0.8);
+        this.algaeMotor.set(1);
     }
 
     public void stopAlgae() {
@@ -105,27 +107,35 @@ public class Arm extends SubsystemBase {
     @Override
     public void periodic() {
 
+        Rotation2d currentRot = this.getRotation();
+
         SmartDashboard.putNumber("Arm Target", this.targetRotation.getDegrees());
-        SmartDashboard.putNumber("Arm Current", this.getRotation().getDegrees());
+        SmartDashboard.putNumber("Arm Current", currentRot.getDegrees());
         // System.out.println(this.getRotation().getDegrees());
-        double PIDEffort = PID.calculate(this.getRotation().getRadians(), this.targetRotation.getRadians());
-        if (getRotation().getDegrees() >= kMaxRotation.getDegrees() && PIDEffort > 0) 
+
+        // How much to move every 20ms essentially
+        double PIDEffort = PID.calculate(currentRot.getRadians(), this.targetRotation.getRadians());
+
+        if (currentRot.getDegrees() >= kMaxRotation.getDegrees() && PIDEffort > 0) 
         {
             this.rotationMotor.stopMotor();
             return;
         }
 
-        if (getRotation().getDegrees() <= kMinRotation.getDegrees() && PIDEffort < 0)
+        if (currentRot.getDegrees() <= kMinRotation.getDegrees() && PIDEffort < 0)
         {
             this.rotationMotor.stopMotor();
             return;
         }
 
-        SmartDashboard.putNumber("Arm Control Speed", PIDEffort);
-        SmartDashboard.putNumber("Arm Measured Speed", this.absoluteEncoder.getVelocity() * 360);
+        SmartDashboard.putNumber("Arm Control Speed", PIDEffort * (1 / Robot.kDefaultPeriod));
+        SmartDashboard.putNumber("Arm Measured Speed", this.absoluteEncoder.getVelocity() / 60 * 360);
 
-        SmartDashboard.putNumber("Arm Voltage", feedforward.calculate(getRotation().getRadians()-Math.PI/2, PIDEffort));
+        final double voltage = feedforward.calculate(getRotation().getRadians()-Math.PI/2, PIDEffort);
 
-        this.rotationMotor.setVoltage(-feedforward.calculate(getRotation().getRadians()-Math.PI/2, PIDEffort));
+        SmartDashboard.putNumber("Arm Voltage", voltage);
+
+        // TODO: Inverse arm rotation motor!
+        this.rotationMotor.setVoltage(-voltage);
     }
 }

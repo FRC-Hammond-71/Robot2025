@@ -67,6 +67,8 @@ public class SwerveModule {
 		// this.offset = azimuthOffset;
 
 		this.DriveMotor = new SparkMax(driveMotorDeviceId, MotorType.kBrushless);
+		SparkConfigurations.ApplyConfigPersistNoReset(this.DriveMotor, SparkConfigurations.BreakMode);
+
 		this.DriveMotor.configure(new SparkMaxConfig().idleMode(IdleMode.kBrake), ResetMode.kNoResetSafeParameters,
 				PersistMode.kPersistParameters);
 		// this.DriveMotor.setIdleMode(IdleMode.kCoast);

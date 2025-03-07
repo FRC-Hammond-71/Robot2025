@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.2770176285747223,
-        "y": 5.245739520871771
+        "x": 8.624743150684932,
+        "y": 1.0424015410958907
       },
       "isLocked": false,
       "linkedName": "CSR"
@@ -20,8 +20,8 @@
         "y": 7.2882344038284135
       },
       "prevControl": {
-        "x": 6.419328370041512,
-        "y": 7.284753372924354
+        "x": 7.467765410958903,
+        "y": 5.715389554794521
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,8 +33,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.0,
-    "maxAcceleration": 0.5,
+    "maxVelocity": 0.8,
+    "maxAcceleration": 1.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,

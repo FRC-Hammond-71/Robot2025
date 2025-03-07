@@ -18,6 +18,7 @@ import java.util.Optional;
 import com.ctre.phoenix6.hardware.Pigeon2;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -75,7 +76,7 @@ public class Drivetrain extends SubsystemBase {
 	private StructPublisher<Pose2d> publisher = NetworkTableInstance.getDefault()
 			.getStructTopic("MyPose", Pose2d.struct).publish();
 
-			private StructPublisher<Pose2d> wpublisher = NetworkTableInstance.getDefault()
+	private StructPublisher<Pose2d> wpublisher = NetworkTableInstance.getDefault()
 			.getStructTopic("MyPoseWWWWW", Pose2d.struct).publish();
 
 	private StructPublisher<Pose2d> llFilteredPosePublisher = NetworkTableInstance.getDefault()
@@ -108,16 +109,31 @@ public class Drivetrain extends SubsystemBase {
 					m_frontRight.getPosition(),
 					m_backLeft.getPosition(),
 					m_backRight.getPosition()
-			}, new Pose2d(0, 0, new Rotation2d(0)));
+			}, new Pose2d(0, 0, new Rotation2d(0)),
+
+			// Odometry Stds
+			VecBuilder.fill(0.2, 0.2, Math.toRadians(5)),
+			// Vision Stds
+			VecBuilder.fill(0.3, 0.3, Math.toRadians(15)));
+
+	public boolean resetPoseWithLimelight()
+	{
+		Optional<Pose2d> es = Limelight.useDevice("limelight").getFilteredEstimatedPose(this.getGyroHeading(), this.getMeasuredSpeeds());
+
+		if (es.isPresent())
+		{
+			this.resetPose(es.get());
+			return true;
+		}
+		return false;
+	}
 
 	public void resetPose(Pose2d initialPose) {
-		// Reset gyro to zero
-		// m_gyro.reset();
-		// Reset PID values to zero (including the set-point!)
-		m_headingPID.reset();
-		m_odometry.resetPose(initialPose);
-		m_headingPID.setSetpoint(initialPose.getRotation().getRadians());
-		isChangingRotationLast = true;
+		this.m_headingPID.reset();
+		this.m_gyro.setYaw(initialPose.getRotation().getDegrees());
+		this.m_odometry.resetPose(initialPose);
+		this.m_headingPID.setSetpoint(initialPose.getRotation().getRadians());
+		this.isChangingRotationLast = true;
 	}
 
 	public Drivetrain() {
@@ -189,8 +205,6 @@ public class Drivetrain extends SubsystemBase {
 	 */
 	public void Drive(ChassisSpeeds speeds, boolean fieldRelative) {
 
-		this.updateOdometry();
-
 		// Our strategy to enable rotation is the following:
 		// - Control is not commanding a rotation, keep the current angle!
 		// - Control IS commanding a rotation from speeds.omegaRadiansPerSecond, do not
@@ -252,11 +266,8 @@ public class Drivetrain extends SubsystemBase {
 		m_backLeft.setDesiredState(swerveModuleStates[2]);
 		m_backRight.setDesiredState(swerveModuleStates[3]);
 
-		this.updateOdometry();
-
 		ActualSwervePublisher.set(this.getMeasuredModulesStates());
 		DesiredSwervePublisher.set(swerveModuleStates);
-		this.publisher.set(this.getPose());
 		this.RelativeSpeedsPublisher.set(this.getRelativeSpeeds());
 	}
 
@@ -308,7 +319,7 @@ public class Drivetrain extends SubsystemBase {
 
 	/** Updates the field relative position of the robot. */
 	public void updateOdometry() {
-		m_odometry.update(this.getGyroHeading(), new SwerveModulePosition[] {
+		this.m_odometry.update(this.getGyroHeading(), new SwerveModulePosition[] {
 			m_frontLeft.getPosition(),
 			m_frontRight.getPosition(),
 			m_backLeft.getPosition(),
@@ -316,11 +327,15 @@ public class Drivetrain extends SubsystemBase {
 		});
 
 		Rotation2d gyroHeading = this.getGyroHeading();
+		SmartDashboard.putNumber("Gyro Heading", gyroHeading.getDegrees());
+		// TODO: THIS ROTATION MUST BE 0 WHEN FACING RED ALLIANCE
+		// BEFORE WE GO TO COMP WE (MAY) NEED LOGIC TO FLIP THIS
+		// THIS IS BECAUSE ROTATION AT ZERO IS ALWAYS FACING THE ENEMY TEAM
 		ChassisSpeeds speeds = this.getMeasuredSpeeds();
 
 		// TODO: Maybe change with the local-odometry heading?
-		Optional<PoseEstimate> unFilteredResult = Limelight.useDevice("Limelight").getEstimationResult(gyroHeading, speeds);
-		Optional<Pose2d> filteredPose = Limelight.useDevice("Limelight").getFilteredEstimatedPose(gyroHeading, speeds);
+		Optional<PoseEstimate> unFilteredResult = Limelight.useDevice("limelight").getEstimationResult(gyroHeading, speeds);
+		Optional<Pose2d> filteredPose = Limelight.useDevice("limelight").getFilteredEstimatedPose(gyroHeading, speeds);
 
 		if (unFilteredResult.isPresent())
 		{
@@ -331,6 +346,8 @@ public class Drivetrain extends SubsystemBase {
 			this.llFilteredPosePublisher.set(filteredPose.get());
 			this.m_odometry.addVisionMeasurement(filteredPose.get(), Timer.getFPGATimestamp());
 		}
+
+		this.publisher.set(this.getPose());
 	}
 
 	private Rotation2d getGyroHeading() {

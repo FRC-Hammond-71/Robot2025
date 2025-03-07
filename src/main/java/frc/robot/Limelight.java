@@ -27,7 +27,7 @@ public class Limelight
 
     // TODO: Add a method which can use multiple limelights if we use mulitple!
 
-    public Optional<PoseEstimate> getEstimationResult(Rotation2d robotRot, ChassisSpeeds robotSpeeds)
+    public Optional<PoseEstimate> getEstimationResult(Rotation2d robotGYRORot, ChassisSpeeds robotSpeeds)
     {
         // We are using MegaTag 2
         // https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-robot-localization-megatag2
@@ -36,9 +36,9 @@ public class Limelight
         // This means it is perfectly viable to focus only on tags that are both relevant and within tolerance, and filter out all other tags
         // If a tag is not in the correct location, filter it out with the dynamic filter feature introduced alongside MegaTag2."
 
-        LimelightHelpers.SetRobotOrientation(this.name, robotRot.getDegrees(), Math.toDegrees(robotSpeeds.omegaRadiansPerSecond), 0, 0, 0, 0);
+        LimelightHelpers.SetRobotOrientation(this.name, robotGYRORot.getDegrees(), Math.toDegrees(robotSpeeds.omegaRadiansPerSecond), 0, 0, 0, 0);
 
-        PoseEstimate es = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(this.name);
+        PoseEstimate es = LimelightHelpers.getBotPoseEstimate_wpiBlue(this.name);
         return Optional.ofNullable(es);
     }
 
@@ -47,7 +47,8 @@ public class Limelight
         Optional<PoseEstimate> es = this.getEstimationResult(robotRot, robotSpeeds);
         if (es.isEmpty()) return Optional.empty();
 
-        if (!es.get().isMegaTag2 || es.get().tagCount < 1 || Math.abs(Math.toDegrees(robotSpeeds.omegaRadiansPerSecond)) > 720)
+        if (es.get().tagCount < 2 || Math.abs(Math.toDegrees(robotSpeeds.omegaRadiansPerSecond)) > 720)
+        // if (!es.get().isMegaTag2 || es.get().tagCount < 1 || Math.abs(Math.toDegrees(robotSpeeds.omegaRadiansPerSecond)) > 720)
         {
             return Optional.empty();
         }

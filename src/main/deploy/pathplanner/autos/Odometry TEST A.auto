@@ -1,0 +1,31 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Base-R3"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "R3-PR"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "PR-Base(Look at R)"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}
