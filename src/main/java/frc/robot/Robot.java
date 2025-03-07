@@ -23,21 +23,23 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.Arm.Arm;
+import frc.robot.Drivetrain.Drivetrain;
+import frc.robot.Elevator.Elevator;
+import frc.robot.Elevator.ElevatorPosition;
+import frc.robot.Limelight.Limelight;
 
 public class Robot extends TimedRobot {
 
 	private final Drivetrain m_swerve = new Drivetrain();
 	private final XboxController m_controller = new XboxController(0);
-<<<<<<< HEAD
 	//private final Controller m_controllers;
-=======
-	private final Controller m_controllers = new Controller("Driver", 0);
->>>>>>> 2d3ed2b06dcf2a3ffd5ab21b26610842e9ceb6bc
 	private final Elevator elevator = new Elevator(40, 8, 9);
 	private final Arm m_arm = new Arm(50, 52, 51);
 
@@ -72,19 +74,25 @@ public class Robot extends TimedRobot {
 
 		SmartDashboard.putData("Auto Chooser", this.autoChooser);
 
-		Limelight.registerDevice("limelight", Optional.empty());
+		Limelight.registerDevice("limelight");
 	}
 
 	@Override
 
 	public void robotPeriodic() {
-		m_swerve.dashboardPrint();
 		SmartDashboard.putNumber("ElevatorHeight", this.elevator.getHeight());
 
-		// if (m_controller.getRightBumperButtonPressed()) {
-		// 	// this.m_swerve.resetPose(FieldPositions.Base);
-		// 	System.out.println(this.m_swerve.resetPoseWithLimelight());
-		// }
+		if (m_controller.getStartButtonPressed()) {
+			// this.m_swerve.resetPose(FieldPositions.Base);
+			if (this.m_swerve.resetPoseWithLimelight())
+			{
+				// Rumble the controller if pose was reset to limelight estimate
+				Commands
+					.runEnd(() -> m_controller.setRumble(RumbleType.kBothRumble, 1), () -> m_controller.setRumble(RumbleType.kBothRumble, 0))
+					.withTimeout(0.2)
+					.schedule();
+			}
+		}
 		CommandScheduler.getInstance().run();
 	}
 
@@ -123,7 +131,6 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void teleopPeriodic() {
-<<<<<<< HEAD
 		driveWithJoystick(true);
 	}
 
@@ -226,8 +233,3 @@ public class Robot extends TimedRobot {
 		m_swerve.Drive(speeds, fieldRelative);
 	}
 }
-=======
-		m_controllers.Drive();
-	}
-}
->>>>>>> 2d3ed2b06dcf2a3ffd5ab21b26610842e9ceb6bc

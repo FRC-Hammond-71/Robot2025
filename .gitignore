@@ -6,3 +6,5 @@ simgui.json
 .gradle/
 
 **/build/
+
+bin

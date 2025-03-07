@@ -33,6 +33,11 @@ public class SwerveModule {
 	public static final double kDriveGearing = 6.12f;
 	public static final double kDriveCircumference = 0.31919f;
 
+	/**
+	 * Max acceleration in M/s of a module.
+	 */
+	public static final double kMaxAcceleration = 6;
+
 	// private Rotation2d offset; //offset is in radians and isnt even used rn
 	// TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(3
 	// * 180, 5 * 180);
@@ -49,7 +54,7 @@ public class SwerveModule {
 	// Voltage to meters/second
 	private double VoltageToMPS;
 
-	private SlewRateLimiter DriveRateLimiter = new SlewRateLimiter(6);
+	private SlewRateLimiter DriveRateLimiter = new SlewRateLimiter(kMaxAcceleration);
 
 	private SwerveModuleState lastDesiredState = new SwerveModuleState();
 

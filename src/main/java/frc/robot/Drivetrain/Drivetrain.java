@@ -2,7 +2,7 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot;
+package frc.robot.Drivetrain;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
@@ -42,7 +42,10 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 // import edu.wpi.first.wpilibj.AnalogGyro;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.LimelightHelpers.PoseEstimate;
+import frc.robot.Robot;
+import frc.robot.SwerveModule;
+import frc.robot.Limelight.Limelight;
+import frc.robot.Limelight.LimelightHelpers.PoseEstimate;
 
 /** Represents a swerve drive style drivetrain. */
 public class Drivetrain extends SubsystemBase {
@@ -64,40 +67,30 @@ public class Drivetrain extends SubsystemBase {
 
 	// Lower when we add simple feed forward!!!!!!
 	private final PIDController m_headingPID = new PIDController(0.5, 0, 0.005);
-	// private final ProfiledPIDController m_headingPID = new
-	// ProfiledPIDController(0.5,0, 0, new TrapezoidProfile.Constraints(Math.PI,
 
-	// Math.PI / 4));[]\
-
-	// private final AnalogGyro m_gyro = new AnalogGyro(0);
 	private final Pigeon2 m_gyro = new Pigeon2(30);
 
+	private StructPublisher<Pose2d> posePublisher = NetworkTableInstance.getDefault()
+			.getStructTopic("rPose", Pose2d.struct).publish();
 
-	private StructPublisher<Pose2d> publisher = NetworkTableInstance.getDefault()
-			.getStructTopic("MyPose", Pose2d.struct).publish();
+	private StructPublisher<Pose2d> llRawPosePublisher = NetworkTableInstance.getDefault()
+		.getStructTopic("llRawPose", Pose2d.struct).publish();
+		
+	private StructPublisher<Pose2d> llMegaTagPosePublisher = NetworkTableInstance.getDefault()
+		.getStructTopic("llMegaTagPose", Pose2d.struct).publish();
 
-	private StructPublisher<Pose2d> wpublisher = NetworkTableInstance.getDefault()
-			.getStructTopic("MyPoseWWWWW", Pose2d.struct).publish();
+	private StructPublisher<Pose2d> llStablePosePublisher = NetworkTableInstance.getDefault()
+		.getStructTopic("llStablePose", Pose2d.struct).publish();
 
-	private StructPublisher<Pose2d> llFilteredPosePublisher = NetworkTableInstance.getDefault()
-		.getStructTopic("llFilteredPose", Pose2d.struct).publish();
-
-	private StructPublisher<Pose2d> llNonFilteredPosePublisher = NetworkTableInstance.getDefault()
-		.getStructTopic("llNonFilteredPose", Pose2d.struct).publish();
-
-	public final StructArrayPublisher<SwerveModuleState> ActualSwervePublisher = NetworkTableInstance.getDefault()
+	public final StructArrayPublisher<SwerveModuleState> measuredSwervePublisher = NetworkTableInstance.getDefault()
 			.getStructArrayTopic("ActualStates", SwerveModuleState.struct).publish();
-	public final StructArrayPublisher<SwerveModuleState> DesiredSwervePublisher = NetworkTableInstance.getDefault()
+	public final StructArrayPublisher<SwerveModuleState> desiredSwervePublisher = NetworkTableInstance.getDefault()
 			.getStructArrayTopic("DesiredStates", SwerveModuleState.struct).publish();
 
-	public final StructPublisher<ChassisSpeeds> RelativeSpeedsPublisher = NetworkTableInstance.getDefault()
+	public final StructPublisher<ChassisSpeeds> relativeSpeedsPublisher = NetworkTableInstance.getDefault()
 			.getStructTopic("RelativeSpeeds", ChassisSpeeds.struct).publish();
-	public final StructPublisher<ChassisSpeeds> DesiredRelativeSpeedsPublisher = NetworkTableInstance.getDefault()
+	public final StructPublisher<ChassisSpeeds> desiredRelativeSpeedsPublisher = NetworkTableInstance.getDefault()
 			.getStructTopic("DesiredRelativeSpeeds", ChassisSpeeds.struct).publish();
-
-	// public final StructArrayPublisher<ChassisSpeeds> ChassisSpeeds =
-	// NetworkTableInstance.getDefault()
-	// .getStructArrayTopic("ChassisSpeeds", ChassisSpeeds.struct).publish();
 
 	private final SwerveDriveKinematics m_kinematics = new SwerveDriveKinematics(m_frontLeftLocation,
 			m_frontRightLocation, m_backLeftLocation, m_backRightLocation);
@@ -112,13 +105,13 @@ public class Drivetrain extends SubsystemBase {
 			}, new Pose2d(0, 0, new Rotation2d(0)),
 
 			// Odometry Stds
-			VecBuilder.fill(0.2, 0.2, Math.toRadians(5)),
+			VecBuilder.fill(0.1, 0.1, Math.toRadians(5)),
 			// Vision Stds
-			VecBuilder.fill(0.3, 0.3, Math.toRadians(15)));
+			VecBuilder.fill(0.6, 0.6, Math.toRadians(30)));
 
 	public boolean resetPoseWithLimelight()
 	{
-		Optional<Pose2d> es = Limelight.useDevice("limelight").getFilteredEstimatedPose(this.getGyroHeading(), this.getMeasuredSpeeds());
+		Optional<Pose2d> es = Limelight.useDevice("limelight").getMegaTagEstimatedPose(this.getGyroHeading(), this.getMeasuredSpeeds());
 
 		if (es.isPresent())
 		{
@@ -130,6 +123,7 @@ public class Drivetrain extends SubsystemBase {
 
 	public void resetPose(Pose2d initialPose) {
 		this.m_headingPID.reset();
+		Limelight.useDevice("limelight").resetPose(initialPose);
 		this.m_gyro.setYaw(initialPose.getRotation().getDegrees());
 		this.m_odometry.resetPose(initialPose);
 		this.m_headingPID.setSetpoint(initialPose.getRotation().getRadians());
@@ -224,7 +218,6 @@ public class Drivetrain extends SubsystemBase {
 			{
 				m_headingPID.setSetpoint(this.getPose().getRotation().getRadians());
 			}
-			wpublisher.set(new Pose2d(this.getPose().getTranslation(), Rotation2d.fromRadians(this.m_headingPID.getSetpoint())));
 
 			// No input, utilize PID to keep the heading!
 			double headingKeepValue = m_headingPID.calculate(this.getPose().getRotation().getRadians());
@@ -266,9 +259,9 @@ public class Drivetrain extends SubsystemBase {
 		m_backLeft.setDesiredState(swerveModuleStates[2]);
 		m_backRight.setDesiredState(swerveModuleStates[3]);
 
-		ActualSwervePublisher.set(this.getMeasuredModulesStates());
-		DesiredSwervePublisher.set(swerveModuleStates);
-		this.RelativeSpeedsPublisher.set(this.getRelativeSpeeds());
+		measuredSwervePublisher.set(this.getMeasuredModulesStates());
+		desiredSwervePublisher.set(swerveModuleStates);
+		this.relativeSpeedsPublisher.set(this.getRelativeSpeeds());
 	}
 
 	@Override
@@ -278,6 +271,7 @@ public class Drivetrain extends SubsystemBase {
 		this.m_frontRight.update();
 		this.m_backLeft.update();
 		this.m_backRight.update();
+		this.dashboardPrint();
 		super.periodic();
 	}
 
@@ -326,36 +320,43 @@ public class Drivetrain extends SubsystemBase {
 			m_backRight.getPosition()
 		});
 
+
+		Pose2d estimatedPose = this.getPose();
 		Rotation2d gyroHeading = this.getGyroHeading();
-		SmartDashboard.putNumber("Gyro Heading", gyroHeading.getDegrees());
 		// TODO: THIS ROTATION MUST BE 0 WHEN FACING RED ALLIANCE
 		// BEFORE WE GO TO COMP WE (MAY) NEED LOGIC TO FLIP THIS
 		// THIS IS BECAUSE ROTATION AT ZERO IS ALWAYS FACING THE ENEMY TEAM
 		ChassisSpeeds speeds = this.getMeasuredSpeeds();
 
 		// TODO: Maybe change with the local-odometry heading?
-		Optional<PoseEstimate> unFilteredResult = Limelight.useDevice("limelight").getEstimationResult(gyroHeading, speeds);
-		Optional<Pose2d> filteredPose = Limelight.useDevice("limelight").getFilteredEstimatedPose(gyroHeading, speeds);
+		Optional<Pose2d> rawResult = Limelight.useDevice("limelight").getRawEstimatedPose();
+		Optional<Pose2d> megaTagResult = Limelight.useDevice("limelight").getMegaTagEstimatedPose(gyroHeading, speeds);
+		Optional<Pose2d> stablePose = Limelight.useDevice("limelight").getStableEstimatedPose(estimatedPose, speeds);
 
-		if (unFilteredResult.isPresent())
+		if (rawResult.isPresent())
 		{
-			this.llNonFilteredPosePublisher.set(unFilteredResult.get().pose);
+			this.llRawPosePublisher.set(rawResult.get());
 		}
-		if (filteredPose.isPresent())
+		if (megaTagResult.isPresent())
 		{
-			this.llFilteredPosePublisher.set(filteredPose.get());
-			this.m_odometry.addVisionMeasurement(filteredPose.get(), Timer.getFPGATimestamp());
+			this.llMegaTagPosePublisher.set(megaTagResult.get());
+		}
+		if (stablePose.isPresent())
+		{
+			// Only contribute the stablePose to Pose Estimation!
+			this.m_odometry.addVisionMeasurement(stablePose.get(), Timer.getFPGATimestamp());
+			this.llStablePosePublisher.set(stablePose.get());
 		}
 
-		this.publisher.set(this.getPose());
+		this.posePublisher.set(this.getPose());
 	}
 
 	private Rotation2d getGyroHeading() {
+		// Gyro at zero should be facing the enemy side!
 		return Rotation2d.fromDegrees(m_gyro.getYaw().getValue().in(Units.Degrees));
 	}
 
 	public Pose2d getPose() {
-		// return this.m_field.getRobotPose();
 		return this.m_odometry.getEstimatedPosition();
 	}
 
@@ -372,6 +373,8 @@ public class Drivetrain extends SubsystemBase {
 		dashboardPrintModuleSpeeds("FR", m_frontRight);
 		dashboardPrintModuleSpeeds("BL", m_backLeft);
 		dashboardPrintModuleSpeeds("BR", m_backRight);
+
+		SmartDashboard.putNumber("Gyro Heading", this.getGyroHeading().getDegrees());
 	}
 
 }
