@@ -59,14 +59,14 @@ public class Drivetrain extends SubsystemBase {
 	private final Translation2d m_backLeftLocation = new Translation2d(-0.381, 0.381);
 	private final Translation2d m_backRightLocation = new Translation2d(-0.381, -0.381);
 
-	private final SwerveModule m_frontLeft = new SwerveModule(14, 15, 20, 2.385382533f);
-	private final SwerveModule m_frontRight = new SwerveModule(16, 17, 21, 2.764054642f);
-	private final SwerveModule m_backLeft = new SwerveModule(12, 13, 22, 2.167192986f);
-	private final SwerveModule m_backRight = new SwerveModule(10, 11, 23, 2.460496016f);
+	private final SwerveModule m_frontLeft = new SwerveModule(14, 15, 20, 2.236);
+	private final SwerveModule m_frontRight = new SwerveModule(16, 17, 21, 2.38472);
+	private final SwerveModule m_backLeft = new SwerveModule(12, 13, 22, 2.3504);
+	private final SwerveModule m_backRight = new SwerveModule(10, 11, 23, 2.28488);
 	private boolean isChangingRotationLast = true;
 
 	// Lower when we add simple feed forward!!!!!!
-	private final PIDController m_headingPID = new PIDController(0.5, 0, 0.005);
+	private final PIDController m_headingPID = new PIDController(1, 0, 0.005);
 
 	private final Pigeon2 m_gyro = new Pigeon2(30);
 
@@ -107,7 +107,7 @@ public class Drivetrain extends SubsystemBase {
 			// Odometry Stds
 			VecBuilder.fill(0.1, 0.1, Math.toRadians(2)),
 			// Vision Stds
-			VecBuilder.fill(2, 2, Math.toRadians(30)));
+			VecBuilder.fill(3, 3, Math.toRadians(30)));
 
 	public boolean resetPoseWithLimelight()
 	{
@@ -239,12 +239,25 @@ public class Drivetrain extends SubsystemBase {
 
 		SwerveModuleState[] swerveModuleStates = m_kinematics.toSwerveModuleStates(speeds);
 
+		Rotation2d maxAzimuthError = Rotation2d.fromDegrees(
+			Math.max(swerveModuleStates[0].angle.minus(this.m_frontLeft.getAzimuthRotation()).getDegrees(),
+			Math.max(swerveModuleStates[1].angle.minus(this.m_frontRight.getAzimuthRotation()).getDegrees(),
+			Math.max(swerveModuleStates[2].angle.minus(this.m_backLeft.getAzimuthRotation()).getDegrees(),
+			swerveModuleStates[3].angle.minus(this.m_backRight.getAzimuthRotation()).getDegrees()))));
+
+		SmartDashboard.putNumber("SwerveModule/Max Error", maxAzimuthError.getDegrees());
+
 		SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, kMaxSpeed);
 
 		swerveModuleStates[0].optimize(this.m_frontLeft.getAzimuthRotation());
 		swerveModuleStates[1].optimize(this.m_frontRight.getAzimuthRotation());
 		swerveModuleStates[2].optimize(this.m_backLeft.getAzimuthRotation());
 		swerveModuleStates[3].optimize(this.m_backRight.getAzimuthRotation());
+
+		// swerveModuleStates[0].speedMetersPerSecond *= maxAzimuthError.getCos();
+		// swerveModuleStates[1].speedMetersPerSecond *= maxAzimuthError.getCos();
+		// swerveModuleStates[2].speedMetersPerSecond *= maxAzimuthError.getCos();
+		// swerveModuleStates[3].speedMetersPerSecond *= maxAzimuthError.getCos();
 
 		swerveModuleStates[0].speedMetersPerSecond *= swerveModuleStates[0].angle
 				.minus(this.m_frontLeft.getAzimuthRotation()).getCos();
@@ -260,8 +273,8 @@ public class Drivetrain extends SubsystemBase {
 		m_backLeft.setDesiredState(swerveModuleStates[2]);
 		m_backRight.setDesiredState(swerveModuleStates[3]);
 
-		measuredSwervePublisher.set(this.getMeasuredModulesStates());
-		desiredSwervePublisher.set(swerveModuleStates);
+		this.measuredSwervePublisher.set(this.getMeasuredModulesStates());
+		this.desiredSwervePublisher.set(swerveModuleStates);
 		this.relativeSpeedsPublisher.set(this.getRelativeSpeeds());
 	}
 
@@ -340,7 +353,7 @@ public class Drivetrain extends SubsystemBase {
 		// TODO: Maybe change with the local-odometry heading?
 		Optional<Pose2d> rawResult = Limelight.useDevice("limelight").getRawEstimatedPose();
 		Optional<Pose2d> megaTagResult = Limelight.useDevice("limelight").getMegaTagEstimatedPose(gyroHeading, speeds);
-		Optional<Pose2d> stablePose = Limelight.useDevice("limelight").getStableEstimatedPose(estimatedPose, speeds);
+		Optional<Pose2d> stablePose = Limelight.useDevice("limelight").getStableEstimatedPose(estimatedPose, gyroHeading, speeds);
 
 		if (rawResult.isPresent())
 		{
@@ -380,6 +393,7 @@ public class Drivetrain extends SubsystemBase {
 	public void dashboardPrint() {
 		SmartDashboard.putNumber("Heading", this.getPose().getRotation().getDegrees());
 		SmartDashboard.putNumber("Gyro Heading", this.getGyroHeading().getDegrees());
+		// SmartDashboard.putNumber("Gyro Velocity", this.m_gyro.getAngularVelocityZWorld().getDegrees());
 
 		dashboardPrintModuleSpeeds("FL", m_frontLeft);
 		dashboardPrintModuleSpeeds("FR", m_frontRight);

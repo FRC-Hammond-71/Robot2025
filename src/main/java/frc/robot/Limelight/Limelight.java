@@ -12,6 +12,7 @@ import frc.robot.SwerveModule;
 import frc.robot.Drivetrain.Drivetrain;
 import frc.robot.Limelight.LimelightHelpers.PoseEstimate;
 import edu.wpi.first.math.filter.LinearFilter;
+import edu.wpi.first.math.filter.MedianFilter;
 
 public class Limelight {
     protected static final Map<String, Limelight> RegisteredLimelights = new HashMap<>();
@@ -19,13 +20,15 @@ public class Limelight {
     private static final double MAX_DISTANCE_PER_CYCLE = Drivetrain.kMaxSpeed * 2 * Robot.kDefaultPeriod;
     private static final double MAX_VELOCITY_CHANGE_PER_CYCLE = SwerveModule.kMaxAcceleration  * 2 * Robot.kDefaultPeriod;
     private static final double MAX_ROTATION_CHANGE_PER_CYCLE = Drivetrain.kMaxAngularSpeed * 2 * Robot.kDefaultPeriod;
+    private static final int sampleSize = 5;
 
     public final String name;
 
     // Increase timeConstant for less smoothing (faster updates)
-    private final LinearFilter xFilter = LinearFilter.singlePoleIIR(0.05, Robot.kDefaultPeriod);
-    private final LinearFilter yFilter = LinearFilter.singlePoleIIR(0.05, Robot.kDefaultPeriod);
-    private final LinearFilter rotationFilter = LinearFilter.singlePoleIIR(0.05, Robot.kDefaultPeriod);
+
+    private final MedianFilter  xFilter = new MedianFilter(sampleSize);
+    private final MedianFilter yFilter = new MedianFilter(sampleSize);
+    private final MedianFilter  rotationFilter = new MedianFilter(sampleSize);
 
     private Pose2d lastFusedPose = null;
 
@@ -64,15 +67,15 @@ public class Limelight {
         PoseEstimate es = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(this.name);
 
         // Reject estimates if too few tags are seen or rotation is extreme
-        if (es == null || !es.isMegaTag2 || es.tagCount < 1 || Math.abs(Math.toDegrees(robotSpeeds.omegaRadiansPerSecond)) > 360) {
+        if (es == null || !es.isMegaTag2 || es.tagCount < 1 || Math.abs(Math.toDegrees(robotSpeeds.omegaRadiansPerSecond)) > 360 * 2) {
             return Optional.empty();
         }
         return Optional.ofNullable(es.pose);
     }
 
     // Get pose with FULL filtering / smoothing (velocity, distance, angular, limits)
-    public Optional<Pose2d> getStableEstimatedPose(Pose2d rPose, ChassisSpeeds robotSpeeds) {
-        Optional<Pose2d> estimatedPoseOpt = getMegaTagEstimatedPose(rPose.getRotation(), robotSpeeds);
+    public Optional<Pose2d> getStableEstimatedPose(Pose2d rPose, Rotation2d rGyro, ChassisSpeeds robotSpeeds) {
+        Optional<Pose2d> estimatedPoseOpt = getMegaTagEstimatedPose(rGyro, robotSpeeds);
         if (estimatedPoseOpt.isEmpty()) return Optional.empty();
     
         Pose2d estimatedPose = estimatedPoseOpt.get();

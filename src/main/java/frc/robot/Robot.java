@@ -4,7 +4,10 @@
 
 package frc.robot;
 
+import java.nio.channels.FileLock;
 import java.util.Optional;
+
+import javax.xml.xpath.XPath;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
@@ -38,7 +41,8 @@ import frc.robot.Limelight.Limelight;
 public class Robot extends TimedRobot {
 
 	private final Drivetrain m_swerve = new Drivetrain();
-	private final XboxController m_controller = new XboxController(0);
+	private final XboxController m_driver = new XboxController(0);
+	private final XboxController m_operator = new XboxController(1);
 	//private final Controller m_controllers;
 	private final Elevator elevator = new Elevator(40, 8, 9);
 	private final Arm m_arm = new Arm(50, 52, 51);
@@ -60,14 +64,19 @@ public class Robot extends TimedRobot {
 		NamedCommands.registerCommand("RaiseElevatorL3", this.elevator.RaiseToL3);
 		NamedCommands.registerCommand("RaiseElevatorL4", this.elevator.RaiseToL4);
 		NamedCommands.registerCommand("RaiseElevatorStow", this.elevator.RaiseToStow);
-		NamedCommands.registerCommand("Score", this.m_arm.ScoreAlgaeCommand);
-		NamedCommands.registerCommand("Intake", this.m_arm.IntakeAlgaeCommand);
+		NamedCommands.registerCommand("ScoreAlgae", this.m_arm.ScoreAlgaeCommand);
+		NamedCommands.registerCommand("IntakeAlgae", this.m_arm.IntakeAlgaeCommand);
 		NamedCommands.registerCommand("IntakeCoral", this.m_arm.IntakeCoralCommand);
 		NamedCommands.registerCommand("ScoreCoral", this.m_arm.ScoreCoralCommand);
+		NamedCommands.registerCommand("TurnToNet", this.m_arm.turnToNet);
+		NamedCommands.registerCommand("TurnToL4", this.m_arm.turnToL4);
+		NamedCommands.registerCommand("TurnToZero", this.m_arm.TurnTo0);
+
 
 		this.autoChooser = AutoBuilder.buildAutoChooser();
 		// this.autoChooser.setDefaultOption("None", Commands.none());
-		this.autoChooser.setDefaultOption("Odometry TEST A", new PathPlannerAuto("Odometry TEST A"));
+		this.autoChooser.setDefaultOption("TestingCommands", new PathPlannerAuto("TestingCommands"));
+		// this.autoChooser.addOption("Testing", );
 
 		SmartDashboard.putData("Auto Chooser", this.autoChooser);
 	}
@@ -77,20 +86,24 @@ public class Robot extends TimedRobot {
 	public void robotPeriodic() {
 		SmartDashboard.putNumber("ElevatorHeight", this.elevator.getHeight());
 
-		if (m_controller.getRawButtonPressed(7))
+		// if (m_driver.getRawButtonPressed(7))
+		// {
+		// 	this.m_swerve.resetGyro(Rotation2d.fromDegrees(180));
+		// }
+		// if (m_driver.getStartButtonPressed()) {
+		// 	// this.m_swerve.resetPose(FieldPositions.Base);
+		// 	if (this.m_swerve.resetPoseWithLimelight())
+		// 	{
+		// 		// Rumble the controller if pose was reset to limelight estimate
+		// 		Commands
+		// 			.runEnd(() -> m_driver.setRumble(RumbleType.kBothRumble, 1), () -> m_driver.setRumble(RumbleType.kBothRumble, 0))
+		// 			.withTimeout(0.2)
+		// 			.schedule();
+		// 	}
+		// }
+		if (m_driver.getRawButtonPressed(7))
 		{
-			this.m_swerve.resetGyro(Rotation2d.fromDegrees(180));
-		}
-		if (m_controller.getStartButtonPressed()) {
-			// this.m_swerve.resetPose(FieldPositions.Base);
-			if (this.m_swerve.resetPoseWithLimelight())
-			{
-				// Rumble the controller if pose was reset to limelight estimate
-				Commands
-					.runEnd(() -> m_controller.setRumble(RumbleType.kBothRumble, 1), () -> m_controller.setRumble(RumbleType.kBothRumble, 0))
-					.withTimeout(0.2)
-					.schedule();
-			}
+			this.m_swerve.resetPose(FieldPositions.Base);
 		}
 		CommandScheduler.getInstance().run();
 	}
@@ -115,11 +128,7 @@ public class Robot extends TimedRobot {
 	@Override
 	public void autonomousInit() {
 
-		autoChooser.getSelected()
-			.beforeStarting(Commands.runOnce(() -> System.out.println("We are starting!")))
-			.andThen(Commands.runOnce(() -> m_swerve.Stop()))
-			.andThen(Commands.runOnce(() -> System.out.println("We are done!")))
-			.schedule();
+		autoChooser.getSelected().schedule();
 	}
 
 	@Override
@@ -131,7 +140,7 @@ public class Robot extends TimedRobot {
 	@Override
 	public void teleopPeriodic() {
 		driveWithJoystick(true);
-		SmartDashboard.putBoolean("button", m_controller.getRawButton(7));
+		SmartDashboard.putBoolean("button", m_driver.getRawButton(7));
 	}
 
 	private double curveJoystick(double joystickInput) 
@@ -140,86 +149,98 @@ public class Robot extends TimedRobot {
 	}
 
 	private void driveWithJoystick(boolean fieldRelative) {
-		double overclock = 3;
+		double overclock = 2;
 		// boolean overclocked;
 		
-		if (m_controller.getPOV() == 45) {
-			// this.elevator.setPositions(ElevatorPosition.Dunno);
+		if (m_operator.getRightTriggerAxis() >= 0.5) {
+			switch (m_operator.getPOV()) {
+				case 0:
+					elevator.setPositions(ElevatorPosition.L4);
+				break;
+
+				case 90:
+					elevator.setPositions(ElevatorPosition.L3);
+				break;
+					
+				case 180: 
+					elevator.setPositions(ElevatorPosition.Algae);
+				break;
+
+				case 270:
+					elevator.setPositions(ElevatorPosition.L2);
+				break;
+			}
+		} else {
+			switch (m_operator.getPOV()) {
+				case 0:
+					m_arm.turnToNet();				
+				break;
+
+				case 90:
+					m_arm.turnToL4();
+				break;
+
+				case 180: 
+					m_arm.turnTo0();
+				break;
+
+				case 270:
+					m_arm.turnTo20();
+				break;
+			}
 		}
 
-		if (m_controller.getPOV() == 0) {
-			this.elevator.setPositions(ElevatorPosition.Stowed);
-			this.m_arm.setTargetRotation(Rotation2d.fromDegrees(0));
-		}
-
-		if (m_controller.getPOV() == 180) {
-			// this.elevator.setPositions(ElevatorPosition.L2);
-			this.m_arm.setTargetRotation(Rotation2d.fromDegrees(180));
-		}
-
-		if (m_controller.getPOV() == 90) {
-			// this.elevator.setPositions(ElevatorPosition.L3);
-			// this.m_arm.setTargetRotation(Rotation2d.fromDegrees(90));
-		}
-
-		if (m_controller.getPOV() == 270) {
-			// this.elevator.setPositions(ElevatorPosition.L3);
-			this.m_arm.setTargetRotation(Rotation2d.fromDegrees(115));
-
-
-			
-		}
-
-		if (m_controller.getLeftBumper()) {
-			this.elevator.setPositions(ElevatorPosition.Dunno);
-		} 
-		else if (m_controller.getRightBumper()) {
-			this.elevator.setPositions(ElevatorPosition.L4);
-		}
-
-		if (m_controller.getAButton()) {
-			//algae score
-			m_arm.scoreAlgae();
-			m_arm.intakeCoral();
-		} else if (!m_controller.getAButton()){
-			m_arm.stopCoral();
-			m_arm.stopAlgae();
-		}
 		
-		if (m_controller.getYButton()) {
-			m_arm.intakeAlgae();
+		if (m_operator.getYButton()) {
+			m_arm.intakeCoral();
+			//m_arm.scoreCoral();
+		} else if (m_operator.getAButton()){
 			m_arm.scoreCoral();
-		} else if (!m_controller.getYButton()){
+			//m_arm.stopAlgae();
+		} else {
 			m_arm.stopCoral();
+		}
+
+		if (m_operator.getXButton()) {
+			m_arm.intakeAlgae();
+		} else if (m_operator.getBButton()) {
+			m_arm.scoreAlgae();
+		} else {
 			m_arm.stopAlgae();
 		}
 
-		if(m_controller.getXButton()) {
-			m_arm.intakeAlgae();
-		} else if (m_controller.getBButton()) {
-			m_arm.scoreAlgae();
-
+		if (m_driver.getRightBumperButton()) {
+			overclock = 3;
 		}
-
 
 		// Get the x speed. We are inverting this because Xbox controllers return
 		// negative values when we push forward.
-		final var xSpeed = xFilter.calculate(curveJoystick(m_controller.getLeftY())) * overclock;
+		var xSpeed = xFilter.calculate(curveJoystick(m_driver.getLeftY())) * overclock;
 
 		// Get the y speed or sideways/strafe speed. We are inverting this because
 		// we want a positive value when we pull to the left. Xbox controllers
 		// return positive values when you pull to the right by default.
-		final var ySpeed = yFilter.calculate(curveJoystick(m_controller.getLeftX())) * overclock;
+		final var ySpeed = yFilter.calculate(curveJoystick(m_driver.getLeftX())) * overclock;
 
 		// Get the rate of angular rotation. We are inverting this because we want a
 		// positive value when we pull to the left (remember, CCW is positive in
 		// mathematics). Xbox controllers return positive values when you pull to
 		// the right by default.
 		// final var rot =
-		// -m_rotLimiter.calculate(MathUtil.applyDeadband(m_controller.getRightX(),
+		// -m_rotLimiter.calculate(MathUtil.applyDeadband(m_driver.getRightX(),
 		// 0.1)) * Drivetrain.kMaxAngularSpeed;
 
-		double rot = curveJoystick(-m_controller.getRightX()) * overclock;
+		if (m_driver.getPOV() == 0) {
+			// this.elevator.setPositions(ElevatorPosition.L3);
+			// this.m_arm.setTargetRotation(Rotation2d.fromDegrees(90));
+			xSpeed = 2;
+		}
+
+		if(m_driver.getPOV() == 180 ) {
+			xSpeed = -2;
+		}
+
+		double rot = curveJoystick(-m_driver.getRightX()) * overclock;
 
 		ChassisSpeeds speeds = new ChassisSpeeds(xSpeed, ySpeed, rot);
 

@@ -25,7 +25,7 @@ import edu.wpi.first.math.controller.PIDController;
 public class Arm extends SubsystemBase {
 
     public static final double kGearing = (17 / 3) * (15 / 4) * (52 / 14);
-    public static final Rotation2d kMaxRotation = Rotation2d.fromDegrees(180);
+    public static final Rotation2d kMaxRotation = Rotation2d.fromDegrees(190);
     public static final Rotation2d kMinRotation = Rotation2d.fromDegrees(0);
 
     private Rotation2d targetRotation;
@@ -53,6 +53,9 @@ public class Arm extends SubsystemBase {
     public Command IntakeAlgaeCommand = Commands.run(() -> this.intakeAlgae(), this);
     public Command IntakeCoralCommand = Commands.run(() -> this.intakeCoral(), this);
     public Command ScoreCoralCommand = Commands.run(() -> this.scoreCoral(), this);
+    public Command turnToNet = Commands.run(() -> this.turnToNet(), this).until(() -> this.isAtTarget());
+    public Command turnToL4 = Commands.run(() -> this.turnToL4(), this).until(() -> this.isAtTarget());
+    public Command TurnTo0 = Commands.run (() -> this.turnTo0(), this).until(() -> this.isAtTarget());
 
     public void stop()
     {
@@ -88,6 +91,25 @@ public class Arm extends SubsystemBase {
         this.coralMotor.stopMotor();
     }
 
+    public boolean isAtTarget(){
+       return this.PID.atSetpoint();
+    }
+
+    public void turnToNet() {  
+        setTargetRotation(Rotation2d.fromDegrees(130));
+    }
+
+    public void turnToL4() {
+        setTargetRotation(Rotation2d.fromDegrees(185));
+    }
+
+    public void turnTo0() {
+        setTargetRotation(Rotation2d.fromDegrees(0));
+    }
+
+    public void turnTo20() {
+        setTargetRotation(Rotation2d.fromDegrees(20));
+    } 
     public void setTargetRotation(Rotation2d target) {
         this.targetRotation = target;
     }
