@@ -74,13 +74,13 @@ public class Drivetrain extends SubsystemBase {
 			.getStructTopic("rPose", Pose2d.struct).publish();
 
 	private StructPublisher<Pose2d> llRawPosePublisher = NetworkTableInstance.getDefault()
-		.getStructTopic("llRawPose", Pose2d.struct).publish();
+		.getStructTopic("ll_RawPose", Pose2d.struct).publish();
 		
 	private StructPublisher<Pose2d> llMegaTagPosePublisher = NetworkTableInstance.getDefault()
-		.getStructTopic("llMegaTagPose", Pose2d.struct).publish();
+		.getStructTopic("ll_MegaTagPose", Pose2d.struct).publish();
 
 	private StructPublisher<Pose2d> llStablePosePublisher = NetworkTableInstance.getDefault()
-		.getStructTopic("llStablePose", Pose2d.struct).publish();
+		.getStructTopic("ll_StablePose", Pose2d.struct).publish();
 
 	public final StructArrayPublisher<SwerveModuleState> measuredSwervePublisher = NetworkTableInstance.getDefault()
 			.getStructArrayTopic("ActualStates", SwerveModuleState.struct).publish();
@@ -105,9 +105,9 @@ public class Drivetrain extends SubsystemBase {
 			}, new Pose2d(0, 0, new Rotation2d(0)),
 
 			// Odometry Stds
-			VecBuilder.fill(0.1, 0.1, Math.toRadians(5)),
+			VecBuilder.fill(0.1, 0.1, Math.toRadians(2)),
 			// Vision Stds
-			VecBuilder.fill(0.6, 0.6, Math.toRadians(30)));
+			VecBuilder.fill(2, 2, Math.toRadians(30)));
 
 	public boolean resetPoseWithLimelight()
 	{
@@ -124,6 +124,7 @@ public class Drivetrain extends SubsystemBase {
 	public void resetPose(Pose2d initialPose) {
 		this.m_headingPID.reset();
 		Limelight.useDevice("limelight").resetPose(initialPose);
+		this.m_gyro.reset();
 		this.m_gyro.setYaw(initialPose.getRotation().getDegrees());
 		this.m_odometry.resetPose(initialPose);
 		this.m_headingPID.setSetpoint(initialPose.getRotation().getRadians());
@@ -299,6 +300,14 @@ public class Drivetrain extends SubsystemBase {
 		return this.m_kinematics.toChassisSpeeds(this.getMeasuredModulesStates());
 	}
 
+	public void resetGyro(Rotation2d rot)
+	{
+		this.m_gyro.reset();
+		this.m_gyro.setYaw(rot.getDegrees());
+		this.m_headingPID.reset();
+		this.m_headingPID.setSetpoint(rot.getRadians());
+	}
+
 	public void Stop() {
 		m_backLeft.Stop();
 		m_backRight.Stop();
@@ -343,9 +352,11 @@ public class Drivetrain extends SubsystemBase {
 		}
 		if (stablePose.isPresent())
 		{
+			Pose2d newStablePose = new Pose2d(stablePose.get().getTranslation(), estimatedPose.getRotation());
+
 			// Only contribute the stablePose to Pose Estimation!
-			this.m_odometry.addVisionMeasurement(stablePose.get(), Timer.getFPGATimestamp());
-			this.llStablePosePublisher.set(stablePose.get());
+			this.m_odometry.addVisionMeasurement(newStablePose, Timer.getFPGATimestamp());
+			this.llStablePosePublisher.set(newStablePose);
 		}
 
 		this.posePublisher.set(this.getPose());
@@ -353,7 +364,7 @@ public class Drivetrain extends SubsystemBase {
 
 	private Rotation2d getGyroHeading() {
 		// Gyro at zero should be facing the enemy side!
-		return Rotation2d.fromDegrees(m_gyro.getYaw().getValue().in(Units.Degrees));
+		return Rotation2d.fromDegrees(this.m_gyro.getYaw().getValue().in(Units.Degrees));
 	}
 
 	public Pose2d getPose() {
@@ -368,13 +379,12 @@ public class Drivetrain extends SubsystemBase {
 
 	public void dashboardPrint() {
 		SmartDashboard.putNumber("Heading", this.getPose().getRotation().getDegrees());
+		SmartDashboard.putNumber("Gyro Heading", this.getGyroHeading().getDegrees());
 
 		dashboardPrintModuleSpeeds("FL", m_frontLeft);
 		dashboardPrintModuleSpeeds("FR", m_frontRight);
 		dashboardPrintModuleSpeeds("BL", m_backLeft);
 		dashboardPrintModuleSpeeds("BR", m_backRight);
-
-		SmartDashboard.putNumber("Gyro Heading", this.getGyroHeading().getDegrees());
 	}
 
 }

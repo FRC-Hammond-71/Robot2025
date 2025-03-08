@@ -43,19 +43,16 @@ public class Robot extends TimedRobot {
 	private final Elevator elevator = new Elevator(40, 8, 9);
 	private final Arm m_arm = new Arm(50, 52, 51);
 
-	// Slew rate limiters to make joystick inputs more gentle; 1/3 sec from 0 to 1.
-	private final SlewRateLimiter m_xspeedLimiter = new SlewRateLimiter(4);
-	private final SlewRateLimiter m_yspeedLimiter = new SlewRateLimiter(4);
-	private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(3);
-
 	private SendableChooser<Command> autoChooser;
 
-	private final LinearFilter xFilter = LinearFilter.singlePoleIIR(0.3, 0.02);
-	private final LinearFilter yFilter = LinearFilter.singlePoleIIR(0.3, 0.02);
+	private final LinearFilter xFilter = LinearFilter.singlePoleIIR(0.3, Robot.kDefaultPeriod);
+	private final LinearFilter yFilter = LinearFilter.singlePoleIIR(0.3, Robot.kDefaultPeriod);
 	public ChassisSpeeds speeds;
 
 	@Override
 	public void robotInit() {
+		Limelight.registerDevice("limelight");
+
 		this.m_swerve.resetPose(FieldPositions.Base);
 
 		NamedCommands.registerCommand("RaiseElevatorL1", this.elevator.RaiseToL1);
@@ -73,8 +70,6 @@ public class Robot extends TimedRobot {
 		this.autoChooser.setDefaultOption("Odometry TEST A", new PathPlannerAuto("Odometry TEST A"));
 
 		SmartDashboard.putData("Auto Chooser", this.autoChooser);
-
-		Limelight.registerDevice("limelight");
 	}
 
 	@Override
@@ -82,6 +77,10 @@ public class Robot extends TimedRobot {
 	public void robotPeriodic() {
 		SmartDashboard.putNumber("ElevatorHeight", this.elevator.getHeight());
 
+		if (m_controller.getRawButtonPressed(7))
+		{
+			this.m_swerve.resetGyro(Rotation2d.fromDegrees(180));
+		}
 		if (m_controller.getStartButtonPressed()) {
 			// this.m_swerve.resetPose(FieldPositions.Base);
 			if (this.m_swerve.resetPoseWithLimelight())
@@ -132,6 +131,7 @@ public class Robot extends TimedRobot {
 	@Override
 	public void teleopPeriodic() {
 		driveWithJoystick(true);
+		SmartDashboard.putBoolean("button", m_controller.getRawButton(7));
 	}
 
 	private double curveJoystick(double joystickInput) 
@@ -142,14 +142,9 @@ public class Robot extends TimedRobot {
 	private void driveWithJoystick(boolean fieldRelative) {
 		double overclock = 3;
 		// boolean overclocked;
-
-		if (m_controller.getPOV() == 270) {
-
-			overclock = Drivetrain.kMaxSpeed;
-		}
-
+		
 		if (m_controller.getPOV() == 45) {
-			// this.elevator.setPositions(ElevatorPosition.L1);
+			// this.elevator.setPositions(ElevatorPosition.Dunno);
 		}
 
 		if (m_controller.getPOV() == 0) {
@@ -159,7 +154,7 @@ public class Robot extends TimedRobot {
 
 		if (m_controller.getPOV() == 180) {
 			// this.elevator.setPositions(ElevatorPosition.L2);
-			// this.m_arm.setTargetRotation(Rotation2d.fromDegrees(185));
+			this.m_arm.setTargetRotation(Rotation2d.fromDegrees(180));
 		}
 
 		if (m_controller.getPOV() == 90) {
@@ -172,13 +167,11 @@ public class Robot extends TimedRobot {
 			this.m_arm.setTargetRotation(Rotation2d.fromDegrees(115));
 
 
-
-
 			
 		}
 
 		if (m_controller.getLeftBumper()) {
-			this.elevator.setPositions(ElevatorPosition.Stowed);
+			this.elevator.setPositions(ElevatorPosition.Dunno);
 		} 
 		else if (m_controller.getRightBumper()) {
 			this.elevator.setPositions(ElevatorPosition.L4);

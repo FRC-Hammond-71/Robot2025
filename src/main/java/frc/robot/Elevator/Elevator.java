@@ -18,7 +18,7 @@ import com.revrobotics.spark.SparkBase.ResetMode;
 
 public class Elevator extends SubsystemBase {
 
-    public static final double kMaxHeight = 22;
+    public static final double kMaxHeight = 21;
     public static final double kMinHeight = 5;
 
     private static final double kGearing = 20;
@@ -69,12 +69,14 @@ public class Elevator extends SubsystemBase {
     public void setPositions(ElevatorPosition position) 
     {
         this.targetPosition = position;
+        this.PID.setSetpoint(position.getHeight());
     }
 
     public void stop()
     {
         this.elevatorMotor.stopMotor();
         this.PID.reset();
+        this.setPositions(ElevatorPosition.Arbitrary(this.getHeight()));
     };
 
     public boolean isAtHeight() {
@@ -104,8 +106,5 @@ public class Elevator extends SubsystemBase {
         SmartDashboard.putNumber("Elevator Desired Speed", PIDEffort);
 
         this.elevatorMotor.setVoltage(feedforward.calculate(PIDEffort) * kGearing);
-        // //luynes so cool
     }
-
 }
-

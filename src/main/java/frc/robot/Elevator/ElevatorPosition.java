@@ -3,10 +3,11 @@ package frc.robot.Elevator;
 public class ElevatorPosition
 {
     public final static ElevatorPosition Stowed = new ElevatorPosition(0);
+    public final static ElevatorPosition Dunno = new ElevatorPosition(1.5);
     public final static ElevatorPosition L1 = new ElevatorPosition(10);
     public final static ElevatorPosition L2 = new ElevatorPosition(13);
     public final static ElevatorPosition L3 = new ElevatorPosition(17);
-    public final static ElevatorPosition L4 = new ElevatorPosition(22);
+    public final static ElevatorPosition L4 = new ElevatorPosition(21);
     
     private double heightInInches;
 

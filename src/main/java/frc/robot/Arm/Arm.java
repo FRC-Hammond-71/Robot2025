@@ -44,9 +44,9 @@ public class Arm extends SubsystemBase {
         this.absoluteEncoder = rotationMotor.getAbsoluteEncoder();
         this.targetRotation = new Rotation2d(); // In degrees goofy :)
         this.feedforward = new ArmFeedforward(0, 0.8, 2, 0);
-        this.PID = new ProfiledPIDController(1.5, 0, 0.0005, new Constraints(Math.PI / 2, Math.PI / 6));
+        this.PID = new ProfiledPIDController(2, 0, 0.0005, new Constraints(Math.PI, Math.PI / 3));
 
-        this.rotationMotor.configure(new SparkMaxConfig().idleMode(IdleMode.kBrake), ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
+        this.rotationMotor.configure(new SparkMaxConfig().smartCurrentLimit(50).idleMode(IdleMode.kBrake), ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
     }
 
     public Command ScoreAlgaeCommand = Commands.run(() -> this.scoreAlgae(), this);
