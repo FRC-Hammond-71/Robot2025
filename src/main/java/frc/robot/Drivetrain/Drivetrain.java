@@ -54,10 +54,10 @@ public class Drivetrain extends SubsystemBase {
 	public static final double kMaxSpeed = 3; // in mps
 	public static final double kMaxAngularSpeed = Math.PI / 2;
 
-	private final Translation2d m_frontLeftLocation = new Translation2d(0.381, 0.381);
-	private final Translation2d m_frontRightLocation = new Translation2d(0.381, -0.381);
-	private final Translation2d m_backLeftLocation = new Translation2d(-0.381, 0.381);
-	private final Translation2d m_backRightLocation = new Translation2d(-0.381, -0.381);
+	private final Translation2d m_frontLeftLocation = new Translation2d(0.223, 0.223);
+	private final Translation2d m_frontRightLocation = new Translation2d(0.223, -0.223);
+	private final Translation2d m_backLeftLocation = new Translation2d(-0.223, 0.223);
+	private final Translation2d m_backRightLocation = new Translation2d(-0.223, -0.223);
 
 	private final SwerveModule m_frontLeft = new SwerveModule(14, 15, 20, 2.236);
 	private final SwerveModule m_frontRight = new SwerveModule(16, 17, 21, 2.38472);
@@ -105,13 +105,13 @@ public class Drivetrain extends SubsystemBase {
 			}, new Pose2d(0, 0, new Rotation2d(0)),
 
 			// Odometry Stds
-			VecBuilder.fill(0.1, 0.1, Math.toRadians(2)),
+			VecBuilder.fill(0.1, 0.1, Math.toRadians(0)),
 			// Vision Stds
-			VecBuilder.fill(3, 3, Math.toRadians(30)));
+			VecBuilder.fill(2, 2, Math.toRadians(30)));
 
 	public boolean resetPoseWithLimelight()
 	{
-		Optional<Pose2d> es = Limelight.useDevice("limelight").getMegaTagEstimatedPose(this.getGyroHeading(), this.getMeasuredSpeeds());
+		Optional<Pose2d> es = Limelight.useDevice("limelight").getRawEstimatedPose();
 
 		if (es.isPresent())
 		{
@@ -122,13 +122,13 @@ public class Drivetrain extends SubsystemBase {
 	}
 
 	public void resetPose(Pose2d initialPose) {
-		this.m_headingPID.reset();
 		Limelight.useDevice("limelight").resetPose(initialPose);
 		this.m_gyro.reset();
 		this.m_gyro.setYaw(initialPose.getRotation().getDegrees());
 		this.m_odometry.resetPose(initialPose);
+		this.m_headingPID.reset();
 		this.m_headingPID.setSetpoint(initialPose.getRotation().getRadians());
-		this.isChangingRotationLast = true;
+		this.isChangingRotationLast = false;
 	}
 
 	public Drivetrain() {
@@ -157,7 +157,7 @@ public class Drivetrain extends SubsystemBase {
 				new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for
 												// holonomic drive trains
 						new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
-						new PIDConstants(5.0, 0.0, 0.0) // Rotation PID constants
+						new PIDConstants(7.0, 0.0, 0.0) // Rotation PID constants
 
 				),
 				config,
@@ -239,25 +239,12 @@ public class Drivetrain extends SubsystemBase {
 
 		SwerveModuleState[] swerveModuleStates = m_kinematics.toSwerveModuleStates(speeds);
 
-		Rotation2d maxAzimuthError = Rotation2d.fromDegrees(
-			Math.max(swerveModuleStates[0].angle.minus(this.m_frontLeft.getAzimuthRotation()).getDegrees(),
-			Math.max(swerveModuleStates[1].angle.minus(this.m_frontRight.getAzimuthRotation()).getDegrees(),
-			Math.max(swerveModuleStates[2].angle.minus(this.m_backLeft.getAzimuthRotation()).getDegrees(),
-			swerveModuleStates[3].angle.minus(this.m_backRight.getAzimuthRotation()).getDegrees()))));
-
-		SmartDashboard.putNumber("SwerveModule/Max Error", maxAzimuthError.getDegrees());
-
 		SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, kMaxSpeed);
 
 		swerveModuleStates[0].optimize(this.m_frontLeft.getAzimuthRotation());
 		swerveModuleStates[1].optimize(this.m_frontRight.getAzimuthRotation());
 		swerveModuleStates[2].optimize(this.m_backLeft.getAzimuthRotation());
 		swerveModuleStates[3].optimize(this.m_backRight.getAzimuthRotation());
-
-		// swerveModuleStates[0].speedMetersPerSecond *= maxAzimuthError.getCos();
-		// swerveModuleStates[1].speedMetersPerSecond *= maxAzimuthError.getCos();
-		// swerveModuleStates[2].speedMetersPerSecond *= maxAzimuthError.getCos();
-		// swerveModuleStates[3].speedMetersPerSecond *= maxAzimuthError.getCos();
 
 		swerveModuleStates[0].speedMetersPerSecond *= swerveModuleStates[0].angle
 				.minus(this.m_frontLeft.getAzimuthRotation()).getCos();
@@ -352,7 +339,7 @@ public class Drivetrain extends SubsystemBase {
 
 		// TODO: Maybe change with the local-odometry heading?
 		Optional<Pose2d> rawResult = Limelight.useDevice("limelight").getRawEstimatedPose();
-		Optional<Pose2d> megaTagResult = Limelight.useDevice("limelight").getMegaTagEstimatedPose(gyroHeading, speeds);
+		Optional<Pose2d> megaTagResult = Limelight.useDevice("limelight").getMegaTag2EstimatedPose(gyroHeading, speeds);
 		Optional<Pose2d> stablePose = Limelight.useDevice("limelight").getStableEstimatedPose(estimatedPose, gyroHeading, speeds);
 
 		if (rawResult.isPresent())

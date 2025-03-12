@@ -1,0 +1,97 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Base-CSR"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "IntakeFromCS"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StowAll"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "CSR-R0LC"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ScoreCoralL3"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StowAll"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "R0LC-Base"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Base-CSR"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "IntakeFromCS"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StowAll"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "CSR-R0RC"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ScoreCoralL3"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StowAll"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "R0RC-Base"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}

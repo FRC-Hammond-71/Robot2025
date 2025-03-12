@@ -3,38 +3,57 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.829965753424658,
-        "y": 4.017487157534247
+        "x": 5.8333806818181815,
+        "y": 4.067735389610389
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.442267278953922,
-        "y": 1.771147260273974
+        "x": 6.794926948051948,
+        "y": 1.660308441558441
       },
       "isLocked": false,
-      "linkedName": "R3L"
+      "linkedName": "R3LC"
     },
     {
       "anchor": {
-        "x": 0.7644886363636364,
-        "y": 1.3659090909090912
+        "x": 1.1752232142857144,
+        "y": 1.062012987012987
       },
       "prevControl": {
-        "x": 1.4181818181818182,
-        "y": 2.196875
+        "x": 1.8289163961038963,
+        "y": 1.8929788961038958
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": "CSR"
     }
   ],
-  "rotationTargets": [],
-  "constraintZones": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.4013452914798183,
+      "rotationDegrees": -158.80978727335756
+    }
+  ],
+  "constraintZones": [
+    {
+      "name": "Constraints Zone",
+      "minWaypointRelativePos": 0.8655097613882867,
+      "maxWaypointRelativePos": 1.0,
+      "constraints": {
+        "maxVelocity": 0.5,
+        "maxAcceleration": 1.5,
+        "maxAngularVelocity": 540.0,
+        "maxAngularAcceleration": 720.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
+      }
+    }
+  ],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 0.8,
-    "maxAcceleration": 0.7,
+    "maxVelocity": 2.0,
+    "maxAcceleration": 1.5,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -42,10 +61,10 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 55.0
+    "rotation": -125.00000000000001
   },
   "reversed": false,
-  "folder": null,
+  "folder": "R-CS",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 180.0

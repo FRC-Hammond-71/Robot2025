@@ -1,0 +1,59 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.15,
+        "y": 3.78995535714207
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 1.6809253246753246,
+        "y": 3.8184456168831167
+      },
+      "isLocked": false,
+      "linkedName": "R0AH"
+    },
+    {
+      "anchor": {
+        "x": 7.841694078947367,
+        "y": 6.016694078947369
+      },
+      "prevControl": {
+        "x": 3.354478169856457,
+        "y": 7.09932394907724
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Net"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.5795964125560514,
+      "rotationDegrees": 149.09256530677783
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 2.0,
+    "maxAcceleration": 1.5,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 90.0
+  },
+  "reversed": false,
+  "folder": "R-Net",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 90.0
+  },
+  "useDefaultConstraints": true
+}

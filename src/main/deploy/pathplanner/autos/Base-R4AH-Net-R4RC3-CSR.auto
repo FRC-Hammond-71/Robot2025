@@ -1,0 +1,73 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Base-R4AH"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "IntakeHigherAlgae"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StowAll"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "R4AH-Net"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ScoreNet"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StowAll"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Net-R4RC"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ScoreCoralL3"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StowAll"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "R4RC-CSR"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}

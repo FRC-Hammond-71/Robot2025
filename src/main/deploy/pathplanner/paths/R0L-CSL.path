@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.1595749971171587,
+        "x": 3.16,
         "y": 4.182342596863468
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.2123691197628124,
-        "y": 6.359851818526741
+        "x": 3.212794122645654,
+        "y": 6.359851818526731
       },
       "isLocked": false,
       "linkedName": "R0L"
@@ -33,8 +33,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 0.8,
-    "maxAcceleration": 0.7,
+    "maxVelocity": 2.0,
+    "maxAcceleration": 1.5,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -45,7 +45,7 @@
     "rotation": -55.0
   },
   "reversed": false,
-  "folder": null,
+  "folder": "R-CS",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 0.0

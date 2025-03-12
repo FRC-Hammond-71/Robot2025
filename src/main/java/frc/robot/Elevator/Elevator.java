@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.SparkConfigurations;
+import frc.robot.Commands.CommandUtils;
 
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.PersistMode;
@@ -18,7 +19,7 @@ import com.revrobotics.spark.SparkBase.ResetMode;
 
 public class Elevator extends SubsystemBase {
 
-    public static final double kMaxHeight = 21;
+    public static final double kMaxHeight = 23;
     public static final double kMinHeight = 5;
 
     private static final double kGearing = 20;
@@ -32,21 +33,31 @@ public class Elevator extends SubsystemBase {
     private final SparkMax elevatorMotor;
     private final Encoder elevatorEncoder;
 
-    private final PIDController PID = new PIDController(0.2, 0, 0.0005);
+    private final PIDController PID = new PIDController(0.4, 0, 0.0005);
     private final ElevatorFeedforward feedforward = new ElevatorFeedforward(0, 0, 0.5, 0);
 
-    private ElevatorPosition targetPosition = ElevatorPosition.Stowed;
+    /**
+     * Desired elevator height in inches!
+     */
+    private double targetPosition = 0;
 
-    public Command RaiseToL1 = Commands.run(() -> this.setPositions(ElevatorPosition.L1), this)
-        .until(() -> this.isAtHeight());
-    public Command RaiseToL2 = Commands.run(() -> this.setPositions(ElevatorPosition.L2), this)
-        .until(() -> this.isAtHeight());
-    public Command RaiseToL3 = Commands.run(() -> this.setPositions(ElevatorPosition.L3), this)
-        .until(() -> this.isAtHeight());
-    public Command RaiseToL4 = Commands.run(() -> this.setPositions(ElevatorPosition.L4), this)
-        .until(() -> this.isAtHeight());
-    public Command RaiseToStow = Commands.run(() -> this.setPositions(ElevatorPosition.Stowed), this)
-        .until(() -> this.isAtHeight());
+    public static final double kL1Height = 5;
+    public static final double kL2Height = 3;
+    public static final double kL3Height = 17;
+    public static final double kL4Height = 23;
+    public static final double kStowHeight = 0;
+    public static final double kLowerAlgaeHeight = 14;
+    public static final double kNetHeight = 23;
+    public static final double kCSIntakeHeight = 20;
+
+    public Command RaiseToL1() { return CommandUtils.withName("RaiseToL1", makeRaiseToCommand(kL1Height)); }
+    public Command RaiseToL2() { return CommandUtils.withName("RaiseToL2", makeRaiseToCommand(kL2Height)); }
+    public Command RaiseToL3() { return CommandUtils.withName("RaiseToL3", makeRaiseToCommand(kL3Height)); };
+    public Command RaiseToL4() { return CommandUtils.withName("RaiseToL4", makeRaiseToCommand(kL4Height)); }
+    public Command RaiseToStowed() { return CommandUtils.withName("RaiseToStowed", makeRaiseToCommand(kStowHeight)); }
+    public Command RaiseToLowerAlgae() { return CommandUtils.withName("RaiseToLowerAlgae", makeRaiseToCommand(kLowerAlgaeHeight)); }
+    public Command RaiseToNet() { return CommandUtils.withName("RaiseToNet", makeRaiseToCommand(kNetHeight)); } 
+    public Command RaiseToCSIntake() { return CommandUtils.withName("RaiseToCSIntake", makeRaiseToCommand(kCSIntakeHeight)); }
 
     public Elevator(int driveMotorDeviceId, int encoderDevicePortA, int encoderDevicePortB) {
 
@@ -55,7 +66,14 @@ public class Elevator extends SubsystemBase {
         // this.elevatorEncoder.setDistancePerPulse(0.00048828125);
         // this.m_encoder.setPosition(0);
 
+        this.PID.setTolerance(0.5);
+
         SparkConfigurations.ApplyConfigPersistNoReset(elevatorMotor, SparkConfigurations.CoastMode);
+    }
+
+    public Command makeRaiseToCommand(double heightInInches)
+    {
+        return Commands.run(() -> this.setPositions(heightInInches), this).until(() -> this.isAtHeight());
     }
 
     /**
@@ -66,17 +84,21 @@ public class Elevator extends SubsystemBase {
         return this.elevatorEncoder.getDistance() * kCircumference * -1 * distancePerPulse;
     }
 
-    public void setPositions(ElevatorPosition position) 
+    public void setPositions(double heightInInches) 
     {
-        this.targetPosition = position;
-        this.PID.setSetpoint(position.getHeight());
+        this.targetPosition = heightInInches;
+        this.PID.setSetpoint(heightInInches);
+    }
+    public void setPositions(ElevatorPosition pos) 
+    {
+        this.setPositions(pos.getHeight());
     }
 
     public void stop()
     {
         this.elevatorMotor.stopMotor();
         this.PID.reset();
-        this.setPositions(ElevatorPosition.Arbitrary(this.getHeight()));
+        this.setPositions(this.getHeight());
     };
 
     public boolean isAtHeight() {
@@ -88,7 +110,7 @@ public class Elevator extends SubsystemBase {
 
         SmartDashboard.putNumber("Elevator Height", this.getHeight());
 
-        double PIDEffort = PID.calculate(this.getHeight(), this.targetPosition.getHeight());
+        double PIDEffort = PID.calculate(this.getHeight(), this.targetPosition);
 
         if (this.getHeight() >= kMaxHeight && PIDEffort > 0) {
 
