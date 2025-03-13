@@ -7,19 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Base-R4AH"
+            "pathName": "BR-R4AH"
           }
         },
         {
           "type": "named",
           "data": {
             "name": "IntakeHigherAlgae"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "StowAll"
           }
         },
         {
@@ -43,25 +37,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Net-R4RC"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "ScoreCoralL3"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "StowAll"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "R4RC-CSR"
+            "pathName": "Net-BR"
           }
         }
       ]

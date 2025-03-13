@@ -52,12 +52,12 @@ public class Drivetrain extends SubsystemBase {
 	private final Field2d m_field = new Field2d();
 
 	public static final double kMaxSpeed = 3; // in mps
-	public static final double kMaxAngularSpeed = Math.PI / 2;
+	public static final double kMaxAngularSpeed = Math.PI * 2;
 
-	private final Translation2d m_frontLeftLocation = new Translation2d(0.223, 0.223);
-	private final Translation2d m_frontRightLocation = new Translation2d(0.223, -0.223);
-	private final Translation2d m_backLeftLocation = new Translation2d(-0.223, 0.223);
-	private final Translation2d m_backRightLocation = new Translation2d(-0.223, -0.223);
+	private final Translation2d m_frontLeftLocation = new Translation2d(0.2635, 0.2635);
+	private final Translation2d m_frontRightLocation = new Translation2d(0.2635, -0.2635);
+	private final Translation2d m_backLeftLocation = new Translation2d(-0.2635, 0.2635);
+	private final Translation2d m_backRightLocation = new Translation2d(-0.2635, -0.2635);
 
 	private final SwerveModule m_frontLeft = new SwerveModule(14, 15, 20, 2.236);
 	private final SwerveModule m_frontRight = new SwerveModule(16, 17, 21, 2.38472);
@@ -66,7 +66,7 @@ public class Drivetrain extends SubsystemBase {
 	private boolean isChangingRotationLast = true;
 
 	// Lower when we add simple feed forward!!!!!!
-	private final PIDController m_headingPID = new PIDController(1, 0, 0.005);
+	private final PIDController m_headingPID = new PIDController(1.4, 0, 0.005);
 
 	private final Pigeon2 m_gyro = new Pigeon2(30);
 
@@ -107,7 +107,7 @@ public class Drivetrain extends SubsystemBase {
 			// Odometry Stds
 			VecBuilder.fill(0.1, 0.1, Math.toRadians(0)),
 			// Vision Stds
-			VecBuilder.fill(2, 2, Math.toRadians(30)));
+			VecBuilder.fill(1.5, 1.5, Math.toRadians(30)));
 
 	public boolean resetPoseWithLimelight()
 	{
@@ -128,6 +128,8 @@ public class Drivetrain extends SubsystemBase {
 		this.m_odometry.resetPose(initialPose);
 		this.m_headingPID.reset();
 		this.m_headingPID.setSetpoint(initialPose.getRotation().getRadians());
+		this.posePublisher.set(initialPose);
+		this.m_field.setRobotPose(initialPose);
 		this.isChangingRotationLast = false;
 	}
 
@@ -156,8 +158,8 @@ public class Drivetrain extends SubsystemBase {
 				(speeds) -> this.Drive(speeds, false),
 				new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for
 												// holonomic drive trains
-						new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
-						new PIDConstants(7.0, 0.0, 0.0) // Rotation PID constants
+						new PIDConstants(8.0, 0.0, 0.0), // Translation PID constants
+						new PIDConstants(3.0, 0.0, 0.0) // Rotation PID constants
 
 				),
 				config,
@@ -273,7 +275,7 @@ public class Drivetrain extends SubsystemBase {
 		this.m_backLeft.update();
 		this.m_backRight.update();
 		this.dashboardPrint();
-		super.periodic();
+		this.updateOdometry();
 	}
 
 	public SwerveModuleState[] getMeasuredModulesStates() {
@@ -373,14 +375,12 @@ public class Drivetrain extends SubsystemBase {
 
 	private void dashboardPrintModuleSpeeds(String name, SwerveModule module) {
 		SmartDashboard.putNumber(String.format("%s Desired-Speed", name), module.getDesiredState().speedMetersPerSecond);
-
 		SmartDashboard.putNumber(String.format("%s Measured-Speed", name),module.getMeasuredState().speedMetersPerSecond);
 	}
 
 	public void dashboardPrint() {
 		SmartDashboard.putNumber("Heading", this.getPose().getRotation().getDegrees());
 		SmartDashboard.putNumber("Gyro Heading", this.getGyroHeading().getDegrees());
-		// SmartDashboard.putNumber("Gyro Velocity", this.m_gyro.getAngularVelocityZWorld().getDegrees());
 
 		dashboardPrintModuleSpeeds("FL", m_frontLeft);
 		dashboardPrintModuleSpeeds("FR", m_frontRight);

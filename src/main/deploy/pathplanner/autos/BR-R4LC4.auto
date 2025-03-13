@@ -7,13 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "BL-R4AH"
+            "pathName": "BR-R4LC4"
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "R4AH-Net"
+            "name": "ScoreCoralL4"
           }
         }
       ]

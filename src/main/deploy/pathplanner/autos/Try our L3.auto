@@ -7,19 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Base-R3LC"
+            "pathName": "BR-R4RC"
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "R3L-CSR"
+            "name": "ScoreCoralL3"
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "CSR-Base"
+            "name": "StowAll"
           }
         }
       ]

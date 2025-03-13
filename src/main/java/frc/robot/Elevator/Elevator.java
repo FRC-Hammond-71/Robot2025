@@ -2,7 +2,11 @@ package frc.robot.Elevator;
 
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj.Encoder;
+import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -33,8 +37,8 @@ public class Elevator extends SubsystemBase {
     private final SparkMax elevatorMotor;
     private final Encoder elevatorEncoder;
 
-    private final PIDController PID = new PIDController(0.4, 0, 0.0005);
-    private final ElevatorFeedforward feedforward = new ElevatorFeedforward(0, 0, 0.5, 0);
+    private final ProfiledPIDController PID = new ProfiledPIDController(0.7, 0, 0.0005, new Constraints(10, 5));
+    private final ElevatorFeedforward feedforward = new ElevatorFeedforward(0, 0, 0.8, 0);
 
     /**
      * Desired elevator height in inches!
@@ -46,8 +50,8 @@ public class Elevator extends SubsystemBase {
     public static final double kL3Height = 17;
     public static final double kL4Height = 23;
     public static final double kStowHeight = 0;
-    public static final double kLowerAlgaeHeight = 14;
-    public static final double kNetHeight = 23;
+    public static final double kLowerAlgaeHeight = 13;
+    public static final double kNetHeight = 22;
     public static final double kCSIntakeHeight = 20;
 
     public Command RaiseToL1() { return CommandUtils.withName("RaiseToL1", makeRaiseToCommand(kL1Height)); }
@@ -87,7 +91,7 @@ public class Elevator extends SubsystemBase {
     public void setPositions(double heightInInches) 
     {
         this.targetPosition = heightInInches;
-        this.PID.setSetpoint(heightInInches);
+        this.PID.setGoal(heightInInches);
     }
     public void setPositions(ElevatorPosition pos) 
     {
@@ -97,20 +101,20 @@ public class Elevator extends SubsystemBase {
     public void stop()
     {
         this.elevatorMotor.stopMotor();
-        this.PID.reset();
+        this.PID.reset(this.getHeight());
         this.setPositions(this.getHeight());
     };
 
     public boolean isAtHeight() {
-        return this.PID.atSetpoint();
+        return this.PID.atGoal();
     }
 
     @Override
     public void periodic() {
 
-        SmartDashboard.putNumber("Elevator Height", this.getHeight());
+        SmartDashboard.putNumber("Elevator/Height", this.getHeight());
 
-        double PIDEffort = PID.calculate(this.getHeight(), this.targetPosition);
+        double PIDEffort = this.PID.calculate(this.getHeight(), this.targetPosition);
 
         if (this.getHeight() >= kMaxHeight && PIDEffort > 0) {
 
@@ -124,8 +128,8 @@ public class Elevator extends SubsystemBase {
             return;
         }
 
-        SmartDashboard.putNumber("Elevator Measured Speed", -this.elevatorEncoder.getRate() * distancePerPulse);
-        SmartDashboard.putNumber("Elevator Desired Speed", PIDEffort);
+        // SmartDashboard.putNumber("Elevator Measured Speed", -this.elevatorEncoder.getRate() * distancePerPulse);
+        // SmartDashboard.putNumber("Elevator Desired Speed", PIDEffort);
 
         this.elevatorMotor.setVoltage(feedforward.calculate(PIDEffort) * kGearing);
     }

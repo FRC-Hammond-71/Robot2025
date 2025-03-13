@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.327678571428571,
-        "y": 2.992228084415584
+        "x": 5.284943181818181,
+        "y": 3.0832386363636357
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.509509466439726,
-        "y": 1.767061101550618
+        "x": 6.466774076829337,
+        "y": 1.8580716534986694
       },
       "isLocked": false,
       "linkedName": "R4AH"
@@ -54,9 +54,9 @@
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 2.0,
-    "maxAcceleration": 1.5,
-    "maxAngularVelocity": 540.0,
+    "maxVelocity": 1.5,
+    "maxAcceleration": 1.0,
+    "maxAngularVelocity": 360.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
     "unlimited": false

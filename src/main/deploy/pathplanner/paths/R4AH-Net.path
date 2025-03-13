@@ -3,37 +3,32 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.327678571428571,
-        "y": 2.992228084415584
+        "x": 5.284943181818181,
+        "y": 3.0832386363636357
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.52426948051948,
-        "y": 1.5249797077922074
+        "x": 6.1610186688311686,
+        "y": 1.2669845779220774
       },
       "isLocked": false,
       "linkedName": "R4AH"
     },
     {
       "anchor": {
-        "x": 7.841694078947367,
-        "y": 6.016694078947369
+        "x": 7.7556818181818175,
+        "y": 6.0525568181818175
       },
       "prevControl": {
-        "x": 7.548877520505808,
-        "y": 4.583009014012304
+        "x": 7.741436688311687,
+        "y": 5.24770698051948
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": "Net"
     }
   ],
-  "rotationTargets": [
-    {
-      "waypointRelativePos": 0.5560538116591902,
-      "rotationDegrees": 179.0119403917965
-    }
-  ],
+  "rotationTargets": [],
   "constraintZones": [
     {
       "name": "Constraints Zone",
@@ -53,15 +48,20 @@
   "eventMarkers": [
     {
       "name": "StowAll",
-      "waypointRelativePos": 0.09963099630996296,
+      "waypointRelativePos": 0.10195227765726689,
       "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "StowAll"
+        }
+      }
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 2.0,
-    "maxAcceleration": 1.5,
-    "maxAngularVelocity": 540.0,
+    "maxVelocity": 1.5,
+    "maxAcceleration": 1.0,
+    "maxAngularVelocity": 360.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
     "unlimited": false

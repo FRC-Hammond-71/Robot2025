@@ -3,39 +3,51 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.841694078947367,
-        "y": 6.016694078947369
+        "x": 5.291940789473683,
+        "y": 2.764555921052631
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.687088815789473,
-        "y": 5.391282894736841
+        "x": 5.823758971291865,
+        "y": 2.454328648325359
       },
       "isLocked": false,
-      "linkedName": "Net"
+      "linkedName": "R4LC3"
     },
     {
       "anchor": {
         "x": 7.2478,
-        "y": 4.92
+        "y": 1.92
       },
       "prevControl": {
-        "x": 6.2478,
-        "y": 4.92
+        "x": 5.85,
+        "y": 1.698295454545455
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "BL"
+      "linkedName": "BR"
     }
   ],
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "StowAll",
+      "waypointRelativePos": 0.23644251626898033,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "StowAll"
+        }
+      }
+    }
+  ],
   "globalConstraints": {
-    "maxVelocity": 2.0,
-    "maxAcceleration": 1.5,
-    "maxAngularVelocity": 540.0,
+    "maxVelocity": 1.5,
+    "maxAcceleration": 1.0,
+    "maxAngularVelocity": 360.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
     "unlimited": false
@@ -45,10 +57,10 @@
     "rotation": 179.4299992551286
   },
   "reversed": false,
-  "folder": null,
+  "folder": "R-Base",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": 122.12499844038747
   },
   "useDefaultConstraints": true
 }

@@ -8,47 +8,28 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.620353084415583,
-        "y": 5.098133116883116
+        "x": 7.506392045454543,
+        "y": 5.14799107142857
       },
       "isLocked": false,
       "linkedName": "Net"
     },
     {
       "anchor": {
-        "x": 5.4701298701298695,
-        "y": 3.0278409090909086
+        "x": 7.2478,
+        "y": 1.92
       },
       "prevControl": {
-        "x": 7.8846793831168815,
-        "y": 3.3982142857142854
+        "x": 6.994358766233766,
+        "y": 2.33695211038961
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "R4RC"
+      "linkedName": "BR"
     }
   ],
-  "rotationTargets": [
-    {
-      "waypointRelativePos": 0.609865470852014,
-      "rotationDegrees": 179.21661474363552
-    }
-  ],
-  "constraintZones": [
-    {
-      "name": "Constraints Zone",
-      "minWaypointRelativePos": 1.0,
-      "maxWaypointRelativePos": 0.8105781057810578,
-      "constraints": {
-        "maxVelocity": 1.0,
-        "maxAcceleration": 2.5,
-        "maxAngularVelocity": 540.0,
-        "maxAngularAcceleration": 720.0,
-        "nominalVoltage": 12.0,
-        "unlimited": false
-      }
-    }
-  ],
+  "rotationTargets": [],
+  "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
@@ -61,10 +42,10 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 119.99999999999999
+    "rotation": 179.4299992551286
   },
   "reversed": false,
-  "folder": "Net-R",
+  "folder": null,
   "idealStartingState": {
     "velocity": 0,
     "rotation": 90.0

@@ -1,0 +1,31 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "BR-R4RC3"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ScoreCoralL3"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "R4LC3-BR"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}
