@@ -1,4 +1,4 @@
-package frc.robot.Arm;
+package frc.robot.Subsystems.Arm;
 
 import org.dyn4j.geometry.Rotation;
 
@@ -34,7 +34,7 @@ public class Arm extends SubsystemBase {
     public static final Rotation2d kMinRotation = Rotation2d.fromDegrees(0);
 
     private Rotation2d targetRotation;
-    private ProfiledPIDController PID = new ProfiledPIDController(4, 0, 0.0005, new Constraints(Math.PI * 2, Math.PI / 2));
+    private ProfiledPIDController PID = new ProfiledPIDController(4, 0, 0.0005, new Constraints(Math.PI * 2, Math.PI * 0.7));
     private ArmFeedforward feedforward;
     private SparkMax rotationMotor;
     private SparkMax algaeMotor;
@@ -50,11 +50,11 @@ public class Arm extends SubsystemBase {
     public static final Rotation2d kHigherAlgaeAngle = Rotation2d.fromDegrees(210);
     public static final Rotation2d kStowedAngle = Rotation2d.fromDegrees(0);
 
-    public Command ScoreAlgaeCommand() { return CommandUtils.withName("ScoreAlgae", Commands.runEnd(() -> this.scoreAlgae(), () -> this.stopAlgae(), this).onlyWhile(() -> isAlgaeDetected)); } 
-    public Command IntakeAlgaeCommand() { return CommandUtils.withName("IntakeAlgae", Commands.runEnd(() -> this.intakeAlgae(), () -> this.stopAlgae(), this).onlyWhile(() -> !isAlgaeDetected).andThen(Commands.runEnd(() -> this.intakeAlgae(), () -> this.stopAlgae(), this).withTimeout(0.5))); }
-    public Command IntakeCoralCommand() { return CommandUtils.withName("IntakeCoral", Commands.runEnd(() -> this.intakeCoral(), () -> this.stopCoral(), this)); }
-    public Command ScoreCoralCommand() { return CommandUtils.withName("ScoreCoral", Commands.runEnd(() -> this.scoreCoral(), () -> this.stopCoral(), this)); }
-    
+    public Command ScoreAlgaeCommand() { return CommandUtils.withName("ScoreAlgae", Commands.runEnd(() -> this.scoreAlgae(), () -> this.stopAlgae()).onlyWhile(() -> isAlgaeDetected)); } 
+    public Command IntakeAlgaeCommand() { return CommandUtils.withName("IntakeAlgae", Commands.runEnd(() -> this.intakeAlgae(), () -> this.stopAlgae())); }
+    public Command IntakeCoralCommand() { return CommandUtils.withName("IntakeCoral", Commands.runEnd(() -> this.intakeCoral(), () -> this.stopCoral())); }
+    public Command ScoreCoralCommand() { return CommandUtils.withName("ScoreCoral", Commands.runEnd(() -> this.scoreCoral(), () -> this.stopCoral())); }    
+
     public Command PivotToNet() { return CommandUtils.withName("PivotToNet", makePivotCommand(kNetAngle)); }
     public Command PivotTo180() { return CommandUtils.withName("PivotTo180", makePivotCommand(k180Angle)); }
     public Command PivotToL4Coral() { return CommandUtils.withName("PivotToL4Coral", makePivotCommand(kL4Angle)); }
@@ -126,7 +126,7 @@ public class Arm extends SubsystemBase {
     }
 
     public void intakeAlgae() {
-        this.algaeMotor.set(1);
+        this.algaeMotor.set(0.8);
     }
 
     public void scoreAlgae() {
@@ -154,7 +154,7 @@ public class Arm extends SubsystemBase {
         setTargetRotation(Rotation2d.fromDegrees(185));
     }
 
-    public void turnTo0() {
+    public void turnToStowed() {
         setTargetRotation(Rotation2d.fromDegrees(0));
     }
 

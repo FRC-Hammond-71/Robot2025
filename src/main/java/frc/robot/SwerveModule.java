@@ -45,7 +45,6 @@ public class SwerveModule {
 	private SparkMax DriveMotor;
 
 	private ProfiledPIDController AzimuthPID = new ProfiledPIDController(0.08, 0, 0.0005, new TrapezoidProfile.Constraints(12 * 180, 15 * 180));
-	// private PIDController AzimuthPID = new PIDController(0.08, 0, 0.0005);
 
 	// Voltage to meters/second
 	private double VoltageToMPS;
@@ -58,24 +57,15 @@ public class SwerveModule {
 
 		this.VoltageToMPS = voltageToMPS;
 		this.AzimuthMotor = new SparkMax(azimuthMotorDeviceId, MotorType.kBrushless);
-		// this.AzimuthMotor.setIdleMode(IdleMode.kCoast);
-		// this.AzimuthMotor.setInverted(true);
-
-		this.AbsoluteEncoder = new CANcoder(encoderDeviceId);
-		// this.AzimuthMotor.getAlternateEncoder()
-
-
-		// this.offset = azimuthOffset;
-
-		this.DriveMotor = new SparkMax(driveMotorDeviceId, MotorType.kBrushless);
-		SparkConfigurations.ApplyConfigPersistNoReset(this.DriveMotor, SparkConfigurations.BreakMode);
-
-		this.DriveMotor.configure(new SparkMaxConfig().idleMode(IdleMode.kBrake), ResetMode.kNoResetSafeParameters,
-				PersistMode.kPersistParameters);
-		// this.DriveMotor.setIdleMode(IdleMode.kCoast);
+		SparkConfigurations.ApplyConfigPersistNoReset(this.AzimuthMotor, SparkConfigurations.BreakMode);
 
 		this.AzimuthPID.enableContinuousInput(0, 360);
 		this.AzimuthPID.setTolerance(2);
+
+		this.AbsoluteEncoder = new CANcoder(encoderDeviceId);
+
+		this.DriveMotor = new SparkMax(driveMotorDeviceId, MotorType.kBrushless);
+		SparkConfigurations.ApplyConfigPersistNoReset(this.DriveMotor, SparkConfigurations.BreakMode);
 	}
 
 	public Rotation2d getAzimuthRotation() {

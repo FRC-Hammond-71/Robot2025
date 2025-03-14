@@ -1,4 +1,4 @@
-package frc.robot.Elevator;
+package frc.robot.Subsystems.Elevator;
 
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
@@ -24,7 +24,7 @@ import com.revrobotics.spark.SparkBase.ResetMode;
 public class Elevator extends SubsystemBase {
 
     public static final double kMaxHeight = 23;
-    public static final double kMinHeight = 5;
+    public static final double kMinHeight = 0;
 
     private static final double kGearing = 20;
     private static final double kDiameter = 1.1279;
@@ -37,8 +37,8 @@ public class Elevator extends SubsystemBase {
     private final SparkMax elevatorMotor;
     private final Encoder elevatorEncoder;
 
-    private final ProfiledPIDController PID = new ProfiledPIDController(0.7, 0, 0.0005, new Constraints(10, 5));
-    private final ElevatorFeedforward feedforward = new ElevatorFeedforward(0, 0, 0.8, 0);
+    private final ProfiledPIDController PID = new ProfiledPIDController(0.35, 0, 0.0005, new Constraints(23, 12));
+    private final ElevatorFeedforward feedforward = new ElevatorFeedforward(0, 0.1, 0.9, 0);
 
     /**
      * Desired elevator height in inches!
@@ -63,12 +63,16 @@ public class Elevator extends SubsystemBase {
     public Command RaiseToNet() { return CommandUtils.withName("RaiseToNet", makeRaiseToCommand(kNetHeight)); } 
     public Command RaiseToCSIntake() { return CommandUtils.withName("RaiseToCSIntake", makeRaiseToCommand(kCSIntakeHeight)); }
 
+    public void Stow()
+    {
+        this.setPositions(ElevatorPosition.Stowed);
+    }
+
     public Elevator(int driveMotorDeviceId, int encoderDevicePortA, int encoderDevicePortB) {
 
         this.elevatorMotor = new SparkMax(driveMotorDeviceId, MotorType.kBrushless);
         this.elevatorEncoder = new Encoder(0, 1, true);
         // this.elevatorEncoder.setDistancePerPulse(0.00048828125);
-        // this.m_encoder.setPosition(0);
 
         this.PID.setTolerance(0.5);
 
@@ -116,6 +120,7 @@ public class Elevator extends SubsystemBase {
 
         double PIDEffort = this.PID.calculate(this.getHeight(), this.targetPosition);
 
+
         if (this.getHeight() >= kMaxHeight && PIDEffort > 0) {
 
             this.elevatorMotor.stopMotor();
@@ -128,8 +133,8 @@ public class Elevator extends SubsystemBase {
             return;
         }
 
-        // SmartDashboard.putNumber("Elevator Measured Speed", -this.elevatorEncoder.getRate() * distancePerPulse);
-        // SmartDashboard.putNumber("Elevator Desired Speed", PIDEffort);
+        SmartDashboard.putNumber("Elevator Measured Speed", -this.elevatorEncoder.getRate() / 60 * distancePerPulse);
+        SmartDashboard.putNumber("Elevator Desired Speed", PIDEffort);
 
         this.elevatorMotor.setVoltage(feedforward.calculate(PIDEffort) * kGearing);
     }

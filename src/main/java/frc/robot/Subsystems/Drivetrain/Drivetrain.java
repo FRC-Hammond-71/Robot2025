@@ -2,7 +2,7 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.Drivetrain;
+package frc.robot.Subsystems.Drivetrain;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
@@ -41,9 +41,14 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 // import edu.wpi.first.math.trajectory.ExponentialProfile.Constraints;
 // import edu.wpi.first.wpilibj.AnalogGyro;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.FieldConstants;
+import frc.robot.ReefWaypointGenerator;
 import frc.robot.Robot;
 import frc.robot.SwerveModule;
+import frc.robot.Attractors.PointAttractor;
+import frc.robot.Attractors.Controllers.FaceController;
 import frc.robot.Limelight.Limelight;
 import frc.robot.Limelight.LimelightHelpers.PoseEstimate;
 
@@ -52,7 +57,8 @@ public class Drivetrain extends SubsystemBase {
 	private final Field2d m_field = new Field2d();
 
 	public static final double kMaxSpeed = 3; // in mps
-	public static final double kMaxAngularSpeed = Math.PI * 2;
+	public static final double kMaxAngularSpeed
+	 = Math.PI * 2;
 
 	private final Translation2d m_frontLeftLocation = new Translation2d(0.2635, 0.2635);
 	private final Translation2d m_frontRightLocation = new Translation2d(0.2635, -0.2635);
@@ -107,7 +113,7 @@ public class Drivetrain extends SubsystemBase {
 			// Odometry Stds
 			VecBuilder.fill(0.1, 0.1, Math.toRadians(0)),
 			// Vision Stds
-			VecBuilder.fill(1.5, 1.5, Math.toRadians(30)));
+			VecBuilder.fill(3, 3, Math.toRadians(30)));
 
 	public boolean resetPoseWithLimelight()
 	{
@@ -152,43 +158,28 @@ public class Drivetrain extends SubsystemBase {
 			return;
 		}
 		AutoBuilder.configure(
-				this::getPose,
-				this::resetPose,
-				this::getRelativeSpeeds,
-				(speeds) -> this.Drive(speeds, false),
-				new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for
-												// holonomic drive trains
-						new PIDConstants(8.0, 0.0, 0.0), // Translation PID constants
-						new PIDConstants(3.0, 0.0, 0.0) // Rotation PID constants
+			this::getPose,
+			this::resetPose,
+			this::getRelativeSpeeds,
+			(speeds) -> this.Drive(speeds, false),
+			new PPHolonomicDriveController(
+					new PIDConstants(8.0, 0.0, 0.0), // Translation PID constants
+					new PIDConstants(Math.PI, 0.0, 0.0) // Rotation PID constants
+			),
+			config,
+			() -> {
+				// Boolean supplier that controls when the path will be mirrored for the red
+				// alliance
+				// This will flip the path being followed to the red side of the field.
+				// THE ORIGIN WILL REMAIN ON THE BLUE SIDE
 
-				),
-				config,
-				() -> {
-					// Boolean supplier that controls when the path will be mirrored for the red
-					// alliance
-					// This will flip the path being followed to the red side of the field.
-					// THE ORIGIN WILL REMAIN ON THE BLUE SIDE
-
-					var alliance = DriverStation.getAlliance();
-					if (alliance.isPresent()) {
-						return alliance.get() == DriverStation.Alliance.Red;
-					}
-					return false;
-				},
-				this);
-
-		// PathPlannerLogging.setLogCurrentPoseCallback((pose) -> {
-		// m_field.setRobotPose(pose); });
-
-		// Logging callback for target robot pose
-		PathPlannerLogging.setLogTargetPoseCallback((pose) -> {
-			m_field.getObject("target pose").setPose(pose);
-		});
-
-		// Logging callback for the active path, this is sent as a list of poses
-		PathPlannerLogging.setLogActivePathCallback((poses) -> {
-			m_field.getObject("path").setPoses(poses);
-		});
+				var alliance = DriverStation.getAlliance();
+				if (alliance.isPresent()) {
+					return alliance.get() == DriverStation.Alliance.Red;
+				}
+				return false;
+			},
+			this);
 	}
 
 	/**
@@ -200,12 +191,8 @@ public class Drivetrain extends SubsystemBase {
 	 * @param fieldRelative Whether the provided x and y speeds are relative to the
 	 *                      field.
 	 */
-	public void Drive(ChassisSpeeds speeds, boolean fieldRelative) {
-
-		// Our strategy to enable rotation is the following:
-		// - Control is not commanding a rotation, keep the current angle!
-		// - Control IS commanding a rotation from speeds.omegaRadiansPerSecond, do not
-		// use PID.
+	public void Drive(ChassisSpeeds speeds, boolean fieldRelative) 
+	{
 		final boolean isUserChangingRotation = speeds.omegaRadiansPerSecond != 0;
 		if (isUserChangingRotation) 
 		{
@@ -268,7 +255,8 @@ public class Drivetrain extends SubsystemBase {
 	}
 
 	@Override
-	public void periodic() {
+	public void periodic() 
+	{
 		this.updateOdometry();
 		this.m_frontLeft.update();
 		this.m_frontRight.update();
@@ -322,8 +310,24 @@ public class Drivetrain extends SubsystemBase {
 		return this.m_kinematics.toChassisSpeeds(this.getMeasuredModulesStates());
 	}
 
+	private boolean wasSlipping = false;
+
 	/** Updates the field relative position of the robot. */
-	public void updateOdometry() {
+	public void updateOdometry() 
+	{
+		// boolean isSlipping = this.m_backLeft.isSlipping() || this.m_backRight.isSlipping() || this.m_frontLeft.isSlipping() || this.m_frontRight.isSlipping();
+		// SmartDashboard.putBoolean("Drivetrain/isSlipping", isSlipping);
+		// if (!wasSlipping && isSlipping)
+		// {
+		// 	this.wasSlipping = true;
+		// 	this.m_odometry.setVisionMeasurementStdDevs(VecBuilder.fill(0.5, 0.5, Math.toRadians(10)));
+		// }
+		// else if (wasSlipping && !isSlipping)
+		// {
+		// 	this.wasSlipping = false;
+		// 	this.m_odometry.setVisionMeasurementStdDevs(VecBuilder.fill(1.5, 1.5, Math.toRadians(30)));
+		// }
+		
 		this.m_odometry.update(this.getGyroHeading(), new SwerveModulePosition[] {
 			m_frontLeft.getPosition(),
 			m_frontRight.getPosition(),
@@ -331,18 +335,15 @@ public class Drivetrain extends SubsystemBase {
 			m_backRight.getPosition()
 		});
 
-
 		Pose2d estimatedPose = this.getPose();
 		Rotation2d gyroHeading = this.getGyroHeading();
-		// TODO: THIS ROTATION MUST BE 0 WHEN FACING RED ALLIANCE
-		// BEFORE WE GO TO COMP WE (MAY) NEED LOGIC TO FLIP THIS
-		// THIS IS BECAUSE ROTATION AT ZERO IS ALWAYS FACING THE ENEMY TEAM
 		ChassisSpeeds speeds = this.getMeasuredSpeeds();
+		Limelight limelight = Limelight.useDevice("limelight");
 
 		// TODO: Maybe change with the local-odometry heading?
-		Optional<Pose2d> rawResult = Limelight.useDevice("limelight").getRawEstimatedPose();
-		Optional<Pose2d> megaTagResult = Limelight.useDevice("limelight").getMegaTag2EstimatedPose(gyroHeading, speeds);
-		Optional<Pose2d> stablePose = Limelight.useDevice("limelight").getStableEstimatedPose(estimatedPose, gyroHeading, speeds);
+		Optional<Pose2d> rawResult = limelight.getRawEstimatedPose();
+		Optional<Pose2d> megaTagResult = limelight.getMegaTag2EstimatedPose(gyroHeading, speeds);
+		Optional<Pose2d> stablePose = limelight.getStableEstimatedPose(estimatedPose, gyroHeading, speeds);
 
 		if (rawResult.isPresent())
 		{
@@ -357,16 +358,15 @@ public class Drivetrain extends SubsystemBase {
 			Pose2d newStablePose = new Pose2d(stablePose.get().getTranslation(), estimatedPose.getRotation());
 
 			// Only contribute the stablePose to Pose Estimation!
-			this.m_odometry.addVisionMeasurement(newStablePose, Timer.getFPGATimestamp());
+			this.m_odometry.addVisionMeasurement(newStablePose, Timer.getFPGATimestamp() - limelight.getLatencyInSeconds());
 			this.llStablePosePublisher.set(newStablePose);
 		}
-
 		this.posePublisher.set(this.getPose());
 	}
 
 	private Rotation2d getGyroHeading() {
 		// Gyro at zero should be facing the enemy side!
-		return Rotation2d.fromDegrees(this.m_gyro.getYaw().getValue().in(Units.Degrees));
+		return Rotation2d.fromRadians(MathUtil.inputModulus(this.m_gyro.getYaw().getValue().in(Units.Radians), -Math.PI, Math.PI));
 	}
 
 	public Pose2d getPose() {

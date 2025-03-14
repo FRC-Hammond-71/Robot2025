@@ -1,4 +1,4 @@
-package frc.robot.Elevator;
+package frc.robot.Subsystems.Elevator;
 
 public class ElevatorPosition
 {

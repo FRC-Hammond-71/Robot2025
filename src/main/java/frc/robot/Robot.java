@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import java.lang.reflect.Field;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
@@ -15,6 +17,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
@@ -25,13 +28,19 @@ import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.Arm.Arm;
+import frc.robot.Attractors.Attractor;
+import frc.robot.Attractors.LineAttractor;
+import frc.robot.Attractors.PointAttractor;
+import frc.robot.Attractors.Controllers.FaceController;
+import frc.robot.Commands.CommandUtils;
 import frc.robot.Commands.ControllerCommands;
 import frc.robot.Commands.GameCommands;
-import frc.robot.Drivetrain.Drivetrain;
-import frc.robot.Elevator.Elevator;
-import frc.robot.Elevator.ElevatorPosition;
 import frc.robot.Limelight.Limelight;
+import frc.robot.Subsystems.Arm.Arm;
+import frc.robot.Subsystems.Drivetrain.Drivetrain;
+import frc.robot.Subsystems.Elevator.Elevator;
+import frc.robot.Subsystems.Elevator.ElevatorPosition;
+import frc.robot.Utilities.ChassisSpeedsUtils;
 
 public class Robot extends TimedRobot {
 
@@ -58,13 +67,40 @@ public class Robot extends TimedRobot {
 	private MechanismLigament2d ElevatorLigament;
 	private MechanismLigament2d ArmLigament;
 
+	
+	private Command semiAutomatedCommand = null;
+	private FaceController[] coralStationControllers;
+	private FaceController netController;
+
 	@Override
-	public void robotInit() {
+	public void robotInit() 
+	{
+		System.out.println("Waiting for connection to Driver Station...");		
+		while (!DriverStation.waitForDsConnection(2))
+		{
+			System.out.println("Retrying connection to Driver Station...");
+		}
+		System.out.println("Connected to Driver Station!");
+
+		final var generatedReefWaypoints = ReefWaypointGenerator.generateHexagonPoses();
+		ReefWaypointGenerator.printWaypoints(generatedReefWaypoints);
+		{
+			Pose2d coralStationLeft = FieldConstants.CoralStationLeftLineup();
+			Pose2d coralStationRight = FieldConstants.CoralStationRightLineup();
+			this.coralStationControllers = new FaceController[] {
+				new FaceController(coralStationLeft.getRotation(), new PointAttractor(coralStationLeft.getTranslation(), 3)),
+				new FaceController(coralStationRight.getRotation(), new PointAttractor(coralStationRight.getTranslation(), 3))
+			};
+		}
+
+		this.netController = new FaceController(
+			FieldConstants.AlgaeNetRotation(), 
+			new LineAttractor(FieldConstants.AlgaeNetLine(), 1f));
 
 		Limelight.registerDevice("limelight");
 
-		initialPoseChooser.addOption("BR", FieldPositions.BR);
-		initialPoseChooser.addOption("BM", FieldPositions.BM);
+		initialPoseChooser.addOption("BR", FieldConstants.BR());
+		initialPoseChooser.addOption("BM", FieldConstants.BM());
 
 		initialPoseChooser.onChange((chosenPose) -> {
 			this.swerve.resetPose(chosenPose);
@@ -92,11 +128,10 @@ public class Robot extends TimedRobot {
 		NamedCommands.registerCommand("IntakeLowerAlgae", this.gCommands.IntakeLowerAlgae());
 		NamedCommands.registerCommand("IntakeFromCS", this.gCommands.IntakeFromCS());
 		NamedCommands.registerCommand("ScoreCoralL3", this.gCommands.ScoreCoralL3());
-		NamedCommands.registerCommand("ScoreCoralL4", this.gCommands.ScoreCoral4());
+		NamedCommands.registerCommand("ScoreCoralL4", this.gCommands.ScoreCoraL4());
 		NamedCommands.registerCommand("StowAll", this.gCommands.StowAll());
 
 		this.autoChooser = AutoBuilder.buildAutoChooser();
-		this.autoChooser.setDefaultOption("BR-R4LC4", new PathPlannerAuto("BR-R4LC4"));
 
 		SmartDashboard.putData("Auto Chooser", this.autoChooser);
 		//#endregion
@@ -117,17 +152,13 @@ public class Robot extends TimedRobot {
 
 	public void robotPeriodic() 
 	{
-		// SmartDashboard.putNumber("Arm/CoralProximity", this.arm.coralProximity());
-		// SmartDashboard.putNumber("Elevator/ElevatorHeight", this.elevator.getHeight());
-		// SmartDashboard.putBoolean("Arm/CoralIsDetected", this.arm.isCoralDetected());
-
 		this.ElevatorLigament.setLength(0.762 + this.elevator.getHeight() / 39.37);
 		this.ArmLigament.setAngle(Rotation2d.fromDegrees(90-82+180).minus(this.arm.getRotation()));
 
 		if (driver.getStartButtonPressed()) {
 			if (this.swerve.resetPoseWithLimelight())
 			{
-				ControllerCommands.Rumble(driver, 0.2).schedule();;
+				ControllerCommands.Rumble(driver, 0.2).schedule();
 			}
 		}
 		CommandScheduler.getInstance().run();
@@ -166,46 +197,40 @@ public class Robot extends TimedRobot {
 	}
 
 	@Override
-	public void teleopPeriodic() {
+	public void teleopPeriodic() 
+	{
 		driveWithJoystick(true);
-		SmartDashboard.putBoolean("button", driver.getRawButton(7));
 	}
 
 	@Override
 	public void teleopInit() 
 	{
-		
+		this.arm.setDefaultCommand(Commands.run(() -> {
+
+			if (this.driver.getYButton())
+			{
+				this.arm.intakeAlgae();
+				this.arm.intakeCoral();
+			}
+			else
+			{
+				this.arm.stopAlgae();
+				this.arm.stopCoral();
+			}
+
+		}, this.arm));	
 	}
 
-	private double curveJoystick(double joystickInput) 
+	@Override
+	public void teleopExit() 
 	{
-		return Math.copySign(Math.pow(MathUtil.applyDeadband(joystickInput, 0.05), 2), joystickInput);
-	}
-
-	public void Lolipop() {
-		elevator.setPositions(ElevatorPosition.Algae);
-		this.arm.turnTo0();
-	}
-	
-	public void LowerAlgae() {
-		elevator.setPositions(ElevatorPosition.LowerAlgae);
-		this.arm.turnTo20();
-	}
-	
-	public void HigherAlgae() {
-		this.arm.turnToL4();
-		elevator.setPositions(ElevatorPosition.Stowed);
-	}
-	
-	public void Net() {
-		elevator.setPositions(ElevatorPosition.Max);
-		this.arm.turnToNet();
+		this.arm.setDefaultCommand(null);
 	}
 
 	private void driveWithJoystick(boolean fieldRelative) {
 		double overclock = 2;
-		// boolean overclocked;
-		
+		boolean overclocked;
+		// 
 		//  if (operator.getRightTriggerAxis() >= 0.5) {
 		//  	switch (operator.getPOV()) {
 		//  		case 0:
@@ -215,7 +240,7 @@ public class Robot extends TimedRobot {
 		//  		case 90:
 		//  			elevator.setPositions(Elevator.kL3Height);
 		//  		break;
-					
+		// 			// 
 		//  		case 180: 
 		//  			elevator.setPositions(Elevator.kLowerAlgaeHeight);
 		//  		break;
@@ -235,7 +260,7 @@ public class Robot extends TimedRobot {
 		//  		break;
 
 		//  		case 180: 
-		//  			arm.turnTo0();
+		//  			arm.turnToStowed();
 		//  		break;
 
 		//  		case 270:
@@ -243,49 +268,83 @@ public class Robot extends TimedRobot {
 		//  		break;
 		//  	}
 		//  }
-
 		
-		if (this.driver.getYButtonPressed())
-		{
-			// this.arm.setTargetRotation(Rotation2d.fromDegrees(180));
-			this.gCommands
-				.ScoreCoral4()
-				.andThen(ControllerCommands.Rumble(driver, 0.2))
-				.finallyDo(() -> 
-				{
-					// this.arm.setTargetRotation(Rotation2d.fromDegrees(0));
-					// this.elevator.setPositions(0);
-				})
-				.onlyWhile(this.driver::getYButton)
-				.schedule();
-		}
+		// if (this.driver.getYButtonPressed())
+		// {
+		// 	// this.arm.setTargetRotation(Rotation2d.fromDegrees(180));
+		// 	this.gCommands
+		// 		.ScoreCoral4()
+		// 		.andThen(ControllerCommands.Rumble(driver, 0.2))
+		// 		.finallyDo(() -> 
+		// 		{
+		// 			this.arm.setTargetRotation(Rotation2d.fromDegrees(0));
+		// 			this.elevator.setPositions(0);
+		// 		})
+		// 		.onlyWhile(this.driver::getYButton)
+		// 		.schedule();
+		// }
+		// if (this.driver.getXButtonPressed())
+		// {
+		// 	this.arm.PivotTo180()
+        //     	.andThen(Commands.deadline(this.arm.IntakeAlgaeCommand(), this.arm.PivotToHigherAlgae()))
+		// 		.onlyWhile(this.driver::getXButton)
+        //     	.andThen(this.arm.PivotTo180())
+		// 		.finallyDo(() -> 
+		// 		{
+		// 			this.arm.setTargetRotation(Rotation2d.fromDegrees(0));
+		// 			this.elevator.setPositions(0);
+		// 		})
+		// 		.schedule();
+		// }
 		if (this.driver.getXButtonPressed())
 		{
+			this.gCommands.ScoreCoralL3()
+				.onlyWhile(this.driver::getXButton)
+				.finallyDo(() -> 
+				{
+					this.arm.setTargetRotation(Rotation2d.fromDegrees(0));
+					this.elevator.setPositions(0);
+				})
+				.schedule();
+		}
+		if (this.driver.getBButtonPressed())
+		{
+			this.gCommands.ScoreCoraL4()
+				.onlyWhile(this.driver::getBButton)
+				.finallyDo(() -> 
+				{
+					this.arm.setTargetRotation(Rotation2d.fromDegrees(0));
+					this.elevator.setPositions(0);
+				})
+				.schedule();
+		}
+		if (this.driver.getAButtonPressed())
+		{
 			this.gCommands
-				.ScoreNet()
+				.IntakeLowerAlgae()
 				.andThen(ControllerCommands.Rumble(driver, 0.2))
 				.finallyDo(() -> 
 				{
 					this.arm.setTargetRotation(Rotation2d.fromDegrees(0));
 					this.elevator.setPositions(0);
 				})
-				.onlyWhile(this.driver::getXButton)
+				.onlyWhile(this.driver::getAButton)
 				.schedule();
 		}
-		if (this.driver.getAButton())
-		{
-			this.arm.setTargetRotation(Rotation2d.fromDegrees(0));
-			this.elevator.setPositions(0);
+		// if (this.driver.getAButton())
+		// {
+		// 	this.arm.setTargetRotation(Rotation2d.fromDegrees(0));
+		// 	this.elevator.setPositions(0);
 
-			// this.gCommands.IntakeAlgae().onlyWhile(this.driver::getAButton).schedule();
-		}
+		// 	// this.gCommands.IntakeAlgae().onlyWhile(this.driver::getAButton).schedule();
+		// }
 		
 		// if (operator.getYButton()) {
 		// 	arm.intakeCoral();
-		// 	//m_arm.scoreCoral();
+		// 	arm.scoreCoral();
 		// } else if (operator.getAButton()){
 		// 	arm.scoreCoral();
-		// 	//m_arm.stopAlgae();
+		// 	arm.stopAlgae();
 		// } else {
 		// 	arm.stopCoral();
 		// }
@@ -296,7 +355,7 @@ public class Robot extends TimedRobot {
 		// 	arm.scoreAlgae();
 		// } else {
 		// 	arm.stopAlgae();
-		// }
+		//  }
 
 		if (driver.getRightBumperButton()) {
 			overclock = 3;
@@ -313,29 +372,91 @@ public class Robot extends TimedRobot {
 		// return positive values when you pull to the right by default.
 		final var ySpeed = yFilter.calculate(curveJoystick(driver.getLeftX())) * overclock;
 
-		// Get the rate of angular rotation. We are inverting this because we want a
-		// positive value when we pull to the left (remember, CCW is positive in
-		// mathematics). Xbox controllers return positive values when you pull to
-		// the right by default.
-		// final var rot =
-		// -m_rotLimiter.calculate(MathUtil.applyDeadband(m_driver.getRightX(),
-		// 0.1)) * Drivetrain.kMaxAngularSpeed;
-
-		// if (driver.getPOV() == 0) {
-			// this.elevator.setPositions(ElevatorPosition.L3);
-			// this.m_arm.setTargetRotation(Rotation2d.fromDegrees(90));
-			// xSpeed = 2;
-		// }
-
-		// if(driver.getPOV() == 180 ) {
-			// xSpeed = -2;
-		// }
-
-		double rot = Math.pow(MathUtil.applyDeadband(-driver.getRightX(), 0.05), 3) * Math.PI;
-		// double rot = curveJoystick(-driver.getRightX()) * overclock;
+		double rot = Math.pow(MathUtil.applyDeadband(-driver.getRightX(), 0.05), 3) * Math.PI * 0.90;
 
 		ChassisSpeeds speeds = new ChassisSpeeds(xSpeed, ySpeed, rot);
 
-		swerve.Drive(speeds, fieldRelative);
+		ChassisSpeeds assistedSpeeds = computeAssistedSpeeds();
+		speeds.vxMetersPerSecond += assistedSpeeds.vxMetersPerSecond;
+		speeds.vyMetersPerSecond += assistedSpeeds.vyMetersPerSecond;
+		speeds.omegaRadiansPerSecond += assistedSpeeds.omegaRadiansPerSecond;
+
+		this.swerve.Drive(speeds, fieldRelative);
+	}
+
+	private ChassisSpeeds computeAssistedSpeeds()
+	{
+		ChassisSpeeds wantedMovement = new ChassisSpeeds();
+		Command wantedCommand = null;
+
+		final boolean useDriverAssisted = true;
+		if (useDriverAssisted && driver.getLeftBumperButton())
+		{
+			int reefCoralLevelNumb = (int)SmartDashboard.getNumber("DriverAssisted/ReefCoralLevel", -1); // -1 and 0 is ignore and L1-L4
+			int reefCoralSideNumb = (int)SmartDashboard.getNumber("DriverAssisted/ReefCoralSide", -1); // -1 is ignore 0 is left and 1 is right
+			int reefAlgaeHighOrLowNumb = (int)SmartDashboard.getNumber("DriverAssisted/ReefAlgae", -1); // -1 is none 0 is low 1 is high
+			int reefFaceNumb = (int)SmartDashboard.getNumber("DriverAssisted/ReefFace", -1); // -1 is none (ignore) and follow standard 0-5 naming
+
+			boolean doAssistCoral = reefCoralLevelNumb > 0 && reefCoralSideNumb >= 0 && reefFaceNumb >= 0;
+			boolean doAssistAlgaeReef = reefAlgaeHighOrLowNumb >= 0 && reefFaceNumb >= 0;
+			boolean doAssistCoralStation = SmartDashboard.getBoolean("DriverAssisted/CoralStation", true);	
+
+			// TODO: FIX ISSUES WHERE CORAL INTAKE CONTROLLER IS USED BUT THEN NOT ATTRACKING PREVENTING OTHER MAGNETS TO BE 
+			// Assist drivers when they are near a coral station by aligning them and running intake commands.
+			FaceController nearestController = Attractor.getNearestAttractor(this.swerve.getPose().getTranslation(), this.coralStationControllers);
+			if (doAssistCoralStation)
+			{
+				if (nearestController != null)
+				{
+					wantedMovement = nearestController.calculate(this.swerve.getPose());
+					double distance = nearestController.getMagnitude(this.swerve.getPose().getTranslation());
+					if(distance > 0.9 && nearestController.isAtRotation())
+					{
+						wantedCommand = Commands
+							.parallel(this.elevator.RaiseToCSIntake(), this.arm.PivotToStowed())
+							.andThen(this.arm.IntakeCoral())
+							.onlyWhile(() -> this.driver.getLeftBumperButton())
+							.andThen(this.arm.IntakeCoralCommand().withTimeout(0.2))
+							.finallyDo(() -> {
+								this.elevator.Stow();
+								this.arm.turnToStowed();
+								// SmartDashboard.putBoolean("DriverAssisted/CoralStation", false);
+							});
+					} 
+				}
+			}
+			else
+			{
+				if (Attractor.isInRange(this.swerve.getPose().getTranslation(), this.netController))
+				{
+					wantedMovement = this.netController.calculate(this.swerve.getPose());
+
+					double distance = this.netController.getMagnitude(this.swerve.getPose().getTranslation());
+					if(distance > 0.9 && this.netController.isAtRotation())
+					{
+						wantedCommand = this.gCommands
+							.ScoreNet()
+							.onlyWhile(() -> this.driver.getLeftBumperButton())
+							.finallyDo(() -> {
+								this.elevator.Stow();
+								this.arm.turnToStowed();
+							});
+					} 
+				}
+			}
+		}
+
+		if (wantedCommand != null && this.semiAutomatedCommand == null)
+		{
+			System.out.println("RAHHH");
+			this.semiAutomatedCommand = wantedCommand;
+			this.semiAutomatedCommand.finallyDo(() -> this.semiAutomatedCommand = null).schedule();
+		}
+		return wantedMovement;
+	}
+
+	private double curveJoystick(double joystickInput) 
+	{
+		return Math.copySign(Math.pow(MathUtil.applyDeadband(joystickInput, 0.05), 2), joystickInput);
 	}
 }

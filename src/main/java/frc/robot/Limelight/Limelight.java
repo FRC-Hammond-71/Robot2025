@@ -9,17 +9,17 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.Robot;
 import frc.robot.SwerveModule;
-import frc.robot.Drivetrain.Drivetrain;
 import frc.robot.Limelight.LimelightHelpers.PoseEstimate;
+import frc.robot.Subsystems.Drivetrain.Drivetrain;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.filter.MedianFilter;
 
 public class Limelight {
     protected static final Map<String, Limelight> RegisteredLimelights = new HashMap<>();
 
-    private static final double MAX_DISTANCE_PER_CYCLE = Drivetrain.kMaxSpeed * 5 * Robot.kDefaultPeriod;
-    private static final double MAX_VELOCITY_CHANGE_PER_CYCLE = SwerveModule.kMaxAcceleration  * 5 * Robot.kDefaultPeriod;
-    private static final double MAX_ROTATION_CHANGE_PER_CYCLE = Drivetrain.kMaxAngularSpeed * 5 * Robot.kDefaultPeriod;
+    private static final double MAX_DISTANCE_PER_CYCLE = Drivetrain.kMaxSpeed * 2 * Robot.kDefaultPeriod;
+    private static final double MAX_VELOCITY_CHANGE_PER_CYCLE = SwerveModule.kMaxAcceleration  * 2 * Robot.kDefaultPeriod;
+    private static final double MAX_ROTATION_CHANGE_PER_CYCLE = Drivetrain.kMaxAngularSpeed * 2 * Robot.kDefaultPeriod;
     private static final int sampleSize = 5;
 
     public final String name;
@@ -58,6 +58,13 @@ public class Limelight {
         this.xFilter.reset();
         this.yFilter.reset();
         this.rotationFilter.reset();
+    }
+
+    // https://www.chiefdelphi.com/t/timestamp-parameter-when-adding-limelight-vision-to-odometry/455908/2
+    // TODO: Include JSON Parsing
+    public double getLatencyInSeconds()
+    {
+        return (LimelightHelpers.getLatency_Capture("limelight") + LimelightHelpers.getLatency_Pipeline("limelight")) / 1000;
     }
 
     public Optional<Pose2d> getMegaTag2EstimatedPose(Rotation2d robotGyro, ChassisSpeeds robotSpeeds) {

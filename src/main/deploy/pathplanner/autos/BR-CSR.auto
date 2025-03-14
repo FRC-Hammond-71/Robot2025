@@ -7,19 +7,25 @@
         {
           "type": "path",
           "data": {
-            "pathName": "BR-R4RC"
+            "pathName": "BR-CSR"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "ScoreCoralL3"
+            "name": "IntakeFromCS"
           }
         },
         {
           "type": "named",
           "data": {
             "name": "StowAll"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "CSR-BR"
           }
         }
       ]
