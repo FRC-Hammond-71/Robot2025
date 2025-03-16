@@ -97,7 +97,7 @@ public class DriverAssistance
             new FaceController(coralStationRight.getRotation(), new PointAttractor(coralStationRight.getTranslation(), 1))
         };
 
-        this.netAttractor = new FaceController(FieldConstants.AlgaeNetRotation(), new LineAttractor(FieldConstants.AlgaeNetLine(), 1));
+        this.netAttractor = new FaceController(FieldConstants.AlgaeNetRotation(), new LineAttractor(FieldConstants.AlgaeNetLine(), 1, 0));
 
         this.processorAttractor = new FaceController(FieldConstants.CoralProcessor().getRotation(), new PointAttractor(FieldConstants.CoralProcessor().getTranslation(), 1));
     }
