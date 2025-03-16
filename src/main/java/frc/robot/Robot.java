@@ -80,7 +80,6 @@ public class Robot extends TimedRobot
 	private DriverAssistance driverAssistance;
 	//private GameCommands gameCommands;
 
-
 	@Override
 	public void robotInit() 
 	{
