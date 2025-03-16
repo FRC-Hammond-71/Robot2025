@@ -1,0 +1,59 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 5.4701298701298695,
+        "y": 3.0278409090909086
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 5.2422077922077905,
+        "y": 2.023559253246753
+      },
+      "isLocked": false,
+      "linkedName": "R4RC"
+    },
+    {
+      "anchor": {
+        "x": 1.1752232142857144,
+        "y": 1.062012987012987
+      },
+      "prevControl": {
+        "x": 2.0856589671645893,
+        "y": 1.6952147723478457
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "CSR"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.44730941704035876,
+      "rotationDegrees": -153.83378095320472
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 1.0,
+    "maxAcceleration": 1.0,
+    "maxAngularVelocity": 360.0,
+    "maxAngularAcceleration": 90.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": -125.00000000000001
+  },
+  "reversed": false,
+  "folder": "R-CS",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 119.99999999999999
+  },
+  "useDefaultConstraints": true
+}
