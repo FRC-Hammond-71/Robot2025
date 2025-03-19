@@ -47,7 +47,7 @@ public class DriverAssistance
 
     private final ReefPoseController[] reefEdgeAttractors;
     public final FaceController[] coralStationAttractors;
-    public final FaceController netAttractor;
+    // public final FaceController netAttractor;
     public final FaceController processorAttractor;
 
     private Robot r;
@@ -97,7 +97,7 @@ public class DriverAssistance
             new FaceController(coralStationRight.getRotation(), new PointAttractor(coralStationRight.getTranslation(), 1))
         };
 
-        this.netAttractor = new FaceController(FieldConstants.AlgaeNetRotation(), new LineAttractor(FieldConstants.AlgaeNetLine(), 1, 0));
+        // this.netAttractor = new FaceController(FieldConstants.AlgaeNetRotation(), new LineAttractor(FieldConstants.AlgaeNetLine(), 1, 0));
 
         this.processorAttractor = new FaceController(FieldConstants.CoralProcessor().getRotation(), new PointAttractor(FieldConstants.CoralProcessor().getTranslation(), 1));
     }
@@ -133,11 +133,11 @@ public class DriverAssistance
             return coralStationAssist;
         }
 
-        DriverAssistOutput netAssist = assistNet(rPose, onlyWhilePredicate);
-        if (!ChassisSpeedsUtils.isEmpty(netAssist.speeds)) {
-            this.r.swerve.m_field.getObject("nearestAttractor").setPose(new Pose2d(this.netAttractor.getPosition(rPose), Rotation2d.fromDegrees(0)));
-            return netAssist;
-        }
+        // DriverAssistOutput netAssist = assistNet(rPose, onlyWhilePredicate);
+        // if (!ChassisSpeedsUtils.isEmpty(netAssist.speeds)) {
+        //     this.r.swerve.m_field.getObject("nearestAttractor").setPose(new Pose2d(this.netAttractor.getPosition(rPose), Rotation2d.fromDegrees(0)));
+        //     return netAssist;
+        // }
 
         DriverAssistOutput processorAssist = assistProcessor(rPose, onlyWhilePredicate);
         if (!ChassisSpeedsUtils.isEmpty(processorAssist.speeds)) {
@@ -173,17 +173,17 @@ public class DriverAssistance
         return new DriverAssistOutput(new ChassisSpeeds(), null);
     }
 
-    private DriverAssistOutput assistNet(Pose2d rPose, BooleanSupplier onlyWhilePredicate)
-    {
-        return new DriverAssistOutput(
-            this.netAttractor.calculate(rPose),
-            this.r.gameCommands.ScoreNet()
-                .onlyWhile(onlyWhilePredicate)
-                .finallyDo(() -> {
-                    this.r.arm.turnToStowed();
-                    this.r.elevator.setPositions(0);
-                }));
-    }
+    // private DriverAssistOutput assistNet(Pose2d rPose, BooleanSupplier onlyWhilePredicate)
+    // {
+    //     return new DriverAssistOutput(
+    //         this.netAttractor.calculate(rPose),
+    //         this.r.gameCommands.ScoreNet()
+    //             .onlyWhile(onlyWhilePredicate)
+    //             .finallyDo(() -> {
+    //                 this.r.arm.turnToStowed();
+    //                 this.r.elevator.setPositions(0);
+    //             }));
+    // }
 
     private DriverAssistOutput assistProcessor(Pose2d rPose, BooleanSupplier onlyWhilePredicate)
     {

@@ -2,7 +2,7 @@ package frc.robot.Attractors;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import frc.robot.LineSegment;
+import frc.robot.Geometry.LineSegment;
 
 public class LineAttractor implements Attractor {
 
