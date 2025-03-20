@@ -130,27 +130,4 @@ public class SwerveModule {
 	public double getSpeed() {
 		return this.DriveMotor.getEncoder().getVelocity() / 60 / kDriveGearing * kDriveCircumference;
 	}
-
-	/**
-	 * Determines if a module may be vaguely loosing contact from the floor. 
-	 * @return True, if the module is predicted to be slipping.
-	 */
-	public boolean isSlipping() 
-	{
-		final double desiredSpeed = this.getDesiredState().speedMetersPerSecond;
-		if (Math.abs(desiredSpeed) < 0.2) {
-			return false;
-		}
-
-		final double measuredSpeed = this.getMeasuredState().speedMetersPerSecond;
-		final double overspeedError = measuredSpeed - desiredSpeed;
-		
-		// Minimum error threshold to prevent noise issues at low speeds
-		final double minAllowedError = 0.2;
-
-		// Allowable error is 25% of desired speed, but at least minAllowedError
-		final double allowedError = Math.max(Math.abs(desiredSpeed) * 0.25, minAllowedError);
-		
-		return overspeedError > allowedError;
-	}
 }

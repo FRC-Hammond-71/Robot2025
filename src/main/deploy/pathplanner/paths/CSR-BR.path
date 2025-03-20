@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 1.1752232142857144,
-        "y": 1.062012987012987
+        "x": 1.0840460526315787,
+        "y": 1.0166118421052637
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.1752232142857144,
-        "y": 1.062012987012987
+        "x": 2.084046052631579,
+        "y": 1.0166118421052637
       },
       "isLocked": false,
       "linkedName": "CSR"
@@ -21,7 +21,7 @@
       },
       "prevControl": {
         "x": 6.2478,
-        "y": 1.92
+        "y": 1.9200000000000002
       },
       "nextControl": null,
       "isLocked": false,
@@ -48,15 +48,15 @@
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 1.0,
-    "maxAcceleration": 1.0,
+    "maxAcceleration": 0.5,
     "maxAngularVelocity": 360.0,
-    "maxAngularAcceleration": 90.0,
+    "maxAngularAcceleration": 120.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 179.4299992551286
+    "rotation": 180.0
   },
   "reversed": false,
   "folder": null,

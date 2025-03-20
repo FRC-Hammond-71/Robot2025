@@ -3,36 +3,41 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 1.1752232142857144,
-        "y": 1.062012987012987
+        "x": 6.05,
+        "y": 4.13
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.386059253246753,
-        "y": 2.315584415584416
+        "x": 7.678124999999999,
+        "y": 1.613157894736843
       },
       "isLocked": false,
-      "linkedName": "CSR"
+      "linkedName": "R3RC4"
     },
     {
       "anchor": {
-        "x": 3.8105722402597397,
-        "y": 2.8568993506493507
+        "x": 1.0840460526315787,
+        "y": 1.0166118421052637
       },
       "prevControl": {
-        "x": 3.2865543999646567,
-        "y": 1.8004504392776277
+        "x": 2.5228041695146954,
+        "y": 2.305796095352017
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "R5LC"
+      "linkedName": "CSR"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.6278026905829545,
+      "rotationDegrees": -156.30086699954572
+    }
+  ],
   "constraintZones": [
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.8676789587852517,
+      "minWaypointRelativePos": 0.928416485900217,
       "maxWaypointRelativePos": 1.0,
       "constraints": {
         "maxVelocity": 0.5,
@@ -48,21 +53,21 @@
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 1.0,
-    "maxAcceleration": 1.0,
+    "maxAcceleration": 0.5,
     "maxAngularVelocity": 360.0,
-    "maxAngularAcceleration": 90.0,
+    "maxAngularAcceleration": 120.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 59.99999999999999
+    "rotation": -125.00000000000001
   },
   "reversed": false,
-  "folder": "CS-R",
+  "folder": "R-CS",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -125.00000000000001
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }

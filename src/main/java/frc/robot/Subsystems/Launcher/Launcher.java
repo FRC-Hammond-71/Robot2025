@@ -30,7 +30,7 @@ public class Launcher extends SubsystemBase
     }
 
     public Command cmdScoreAlgae() { return CommandUtils.withName("ScoreAlgae", Commands.runEnd(() -> this.scoreAlgae(), () -> this.stopAlgae(), this).withTimeout(1)); } 
-    public Command cmdAutoIntakeAlgae() { return CommandUtils.withName("IntakeAlgae", Commands.runEnd(() -> this.intakeAlgae(), () -> this.stopAlgae(), this).onlyWhile(() -> !isAlgaeDetected).andThen(Commands.runEnd(() -> this.intakeAlgae(), () -> this.stopAlgae(), this).withTimeout(0.5))); }
+    public Command cmdAutoIntakeAlgae() { return CommandUtils.withName("IntakeAlgae", Commands.runEnd(() -> this.intakeAlgae(), () -> this.stopAlgae(), this).onlyWhile(() -> !isAlgaeDetected).andThen(Commands.runEnd(() -> this.intakeAlgae(), () -> this.stopAlgae(), this).withTimeout(1))); }
     public Command cmdIntakeAlgae() { return CommandUtils.withName("IntakeAlgae", Commands.runEnd(() -> this.intakeAlgae(), () -> this.stopAlgae(), this)); }
     public Command cmdIntakeCoral() { return CommandUtils.withName("IntakeCoral", Commands.runEnd(() -> this.intakeCoral(), () -> this.stopCoral(), this)); }
     public Command cmdScoreCoral() { return CommandUtils.withName("ScoreCoral", Commands.runEnd(() -> this.scoreCoral(), () -> this.stopCoral(), this)); }

@@ -17,6 +17,7 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -34,14 +35,14 @@ public class Arm extends SubsystemBase {
     public static final Rotation2d kMinRotation = Rotation2d.fromDegrees(0);
 
     private Rotation2d targetRotation;
-    private ProfiledPIDController PID = new ProfiledPIDController(3, 0, 0.0005, new Constraints(Math.PI * 2, Math.PI * 0.9));
+    private ProfiledPIDController PID = new ProfiledPIDController(2.5, 0, 0.00002, new Constraints(Math.PI * 2.5, Math.PI));
     private ArmFeedforward feedforward;
     private SparkMax rotationMotor;
     private AbsoluteEncoder absoluteEncoder;
 
     public static final Rotation2d kNetAngle = Rotation2d.fromDegrees(125);
-    public static final Rotation2d k180Angle = Rotation2d.fromDegrees(180);
-    public static final Rotation2d kL4Angle = Rotation2d.fromDegrees(180);
+    public static final Rotation2d k180Angle = Rotation2d.fromDegrees(175);
+    public static final Rotation2d kL4Angle = Rotation2d.fromDegrees(175);
     public static final Rotation2d kLowerAlgaeAngle = Rotation2d.fromDegrees(20);
     public static final Rotation2d kHigherAlgaeAngle = Rotation2d.fromDegrees(210);
     public static final Rotation2d kStowedAngle = Rotation2d.fromDegrees(0);
@@ -55,16 +56,18 @@ public class Arm extends SubsystemBase {
 
     public Arm(int rotationMotorDeviceID) {
             
-        this.PID.setTolerance(Math.toRadians(2));
+        this.PID.setTolerance(Math.toRadians(1));
 
         this.rotationMotor = new SparkMax(rotationMotorDeviceID, MotorType.kBrushless);
         this.absoluteEncoder = rotationMotor.getAbsoluteEncoder();
 
         this.targetRotation = new Rotation2d();
 
-        this.feedforward = new ArmFeedforward(0.05, 1.2, 1.5, 0);
+        this.feedforward = new ArmFeedforward(0.05, 1.7, 1.4, 0);
 
         this.rotationMotor.configure(new SparkMaxConfig().idleMode(IdleMode.kBrake), ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
+
+        SmartDashboard.putData("Arm/PID", this.PID);
     }
 
     public Command makePivotCommand(Rotation2d rot)
@@ -120,11 +123,12 @@ public class Arm extends SubsystemBase {
     @Override
     public void periodic() 
     {
+        if (DriverStation.isDisabled()) return;
+
         Rotation2d currentRot = this.getRotation();
 
-        // SmartDashboard.putNumber("Arm Target", this.targetRotation.getDegrees());
-        SmartDashboard.putNumber("Arm Current", currentRot.getDegrees());
-        // System.out.println(this.getRotation().getDegrees());
+        SmartDashboard.putNumber("Arm/Amps", this.rotationMotor.getOutputCurrent());
+        SmartDashboard.putNumber("Arm/Rotation", this.getRotation().getDegrees());
 
         // How much to move every 20ms essentially
         double PIDEffort = PID.calculate(currentRot.getRadians(), this.targetRotation.getRadians());
@@ -141,12 +145,10 @@ public class Arm extends SubsystemBase {
             return;
         }
 
-        SmartDashboard.putNumber("Arm Control Speed", PIDEffort * (1 / Robot.kDefaultPeriod));
-        SmartDashboard.putNumber("Arm Measured Speed", this.absoluteEncoder.getVelocity() * 360);
+        SmartDashboard.putNumber("Arm/ControlSpeed", PIDEffort * (1 / Robot.kDefaultPeriod));
+        SmartDashboard.putNumber("Arm/MeasuredSpeed", this.absoluteEncoder.getVelocity() * 360);
 
         final double voltage = feedforward.calculate(getRotation().getRadians()-Math.PI/2, PIDEffort);
-
-        // SmartDashboard.putNumber("Arm Voltage", voltage);
 
         // TODO: Inverse arm rotation motor!
         this.rotationMotor.setVoltage(-voltage);

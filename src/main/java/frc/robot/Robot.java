@@ -22,13 +22,16 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -47,6 +50,9 @@ import frc.robot.Limelight.LimelightHelpers;
 import frc.robot.Subsystems.Arm.Arm;
 import frc.robot.Subsystems.Drivetrain.Drivetrain;
 import frc.robot.Subsystems.Elevator.Elevator;
+import frc.robot.Subsystems.LEDs.LEDController;
+import frc.robot.Subsystems.LEDs.LEDProgram;
+import frc.robot.Subsystems.LEDs.LEDPrograms;
 import frc.robot.Subsystems.Launcher.Launcher;
 import frc.robot.Utilities.ChassisSpeedsUtils;
 public class Robot extends TimedRobot 
@@ -83,6 +89,16 @@ public class Robot extends TimedRobot
 	@Override
 	public void robotInit() 
 	{
+		//#region Setup LED Controller
+		new LEDController(0, 60, true);		
+		SmartDashboard.putData("LED Preview", LEDController.getDefault().ledPreview);
+		// Update LEDs every 100 ms!
+		// LED updating is ran on a separate thread instead.
+		// addPeriodic(LEDController.getDefault()::updateLEDs, 0.1, 0.05);
+		//#endregion
+
+		LEDController.getDefault().setProgram(LEDPrograms.Warning);
+
 		System.out.println("Waiting for connection to Driver Station...");		
 		while (!DriverStation.waitForDsConnection(2))
 		{
@@ -92,15 +108,16 @@ public class Robot extends TimedRobot
 
 		frc.robot.Limelight.Limelight.registerDevice("limelight");
 
-		initialPoseChooser.addOption("BR", FieldConstants.BR());
-		initialPoseChooser.setDefaultOption("BM", FieldConstants.BM());
-		initialPoseChooser.addOption("BL", FieldConstants.BL());
-
-		//baller 
+		initialPoseChooser.addOption("Left - Blue", FieldConstants.BLeftBlue);
+		initialPoseChooser.addOption("Left - Red", FieldConstants.BLeftRed);
+		initialPoseChooser.addOption("Middle - Blue", FieldConstants.BMiddleBlue);
+		initialPoseChooser.addOption("Middle - Red", FieldConstants.BMiddleRed);
+		initialPoseChooser.addOption("Right - Blue", FieldConstants.BRightBlue);
+		initialPoseChooser.addOption("Right - Red", FieldConstants.BRightRed);
 
 		initialPoseChooser.onChange((chosenPose) -> {
 			this.swerve.resetPose(chosenPose);
-			System.out.printf("Reset pose to (%f, %f) at %f\n", chosenPose.getX(), chosenPose.getY(), chosenPose.getRotation().getDegrees());
+			LEDController.getDefault().setProgram(LEDPrograms.PoseResetComplete);
 		});
 
 		SmartDashboard.putData("Initial Pose Chooser", this.initialPoseChooser);
@@ -126,11 +143,11 @@ public class Robot extends TimedRobot
 		NamedCommands.registerCommand("ScoreCoralL3", this.gameCommands.ScoreCoralL3());
 		NamedCommands.registerCommand("ScoreCoralL4", this.gameCommands.ScoreCoraL4());
 		NamedCommands.registerCommand("StowAll", this.gameCommands.StowAll());
+		NamedCommands.registerCommand("StopSwerve", Commands.runOnce(() -> this.swerve.Stop()));
 
 		this.autoChooser = AutoBuilder.buildAutoChooser();
 
 		SmartDashboard.putData("Auto Chooser", this.autoChooser);
-
 		//#endregion
 
 		this.Mechanism = new Mechanism2d(2, 2);
@@ -156,11 +173,14 @@ public class Robot extends TimedRobot
 
 		if (driverController.getStartButtonPressed()) 
 		{
+			// Use to counteract gyro-drift. MUST ALWAYS BE FACING TOWARDS RED ALLIANCE!
+			this.swerve.resetGyro(Rotation2d.fromDegrees(0));
+
 			// CommandScheduler.getInstance().cancel(this.semiAutomatedCommand);
-			if (this.swerve.resetPoseWithLimelight())
-			{
-				ControllerCommands.Rumble(driverController, 0.2).schedule();
-			}
+			// if (this.swerve.resetPoseWithLimelight())
+			// {
+			// 	ControllerCommands.Rumble(driverController, 0.2).schedule();
+			// }
 		}
 		CommandScheduler.getInstance().run();
 	}
@@ -180,15 +200,9 @@ public class Robot extends TimedRobot
 	}
 
 	@Override
-	public void autonomousPeriodic() {
-
-		swerve.updateOdometry();
-
-	}
-
-	@Override
 	public void autonomousInit() {
 
+		LEDController.getDefault().setProgram(LEDPrograms.BeginAutoCommand);
 		autoChooser.getSelected().schedule();
 	}
 
@@ -259,40 +273,30 @@ public class Robot extends TimedRobot
 	}
 
 	private void driveWithJoystick(boolean fieldRelative) {
-		double overclock = 3;
+		double translationSpeed = 3;
 
 		if (this.driverController.getBButtonPressed())
 		{
 			this.gameCommands.ScoreProcessor().onlyWhile(this.driverController::getBButton);
 		}
-		
-		// 	if (this.driverController.getAButton())
-		// {
-		// 	this.arm.setTargetRotation(Rotation2d.fromDegrees(0));
-		// 	this.elevator.setPositions(0);
-		// }
-
+	
 		if (driverController.getRightBumperButton()) 
 		{
-			overclock = 4.3;
+			translationSpeed = 4.3;
 		}
 
-		// Get the x speed. We are inverting this because Xbox controllers return
-		// negative values when we push forward.
-
-
 		var xSpeed = (onRedAlliance()) 
-			? -xFilter.calculate(curveJoystick(-driverController.getLeftY())) * overclock 
-			:  xFilter.calculate(curveJoystick(-driverController.getLeftY())) * overclock;
+			? xFilter.calculate(curveJoystick(-driverController.getLeftY())) * translationSpeed 
+			: -xFilter.calculate(curveJoystick(-driverController.getLeftY())) * translationSpeed;
 
 		// Get the y speed or sideways/strafe speed. We are inverting this because
 		// we want a positive value when we pull to the left. Xbox controllers
 		// return positive values when you pull to the right by default.
 		final var ySpeed = (onRedAlliance()) 
-			? -yFilter.calculate(curveJoystick(-driverController.getLeftX())) * overclock
-			:  yFilter.calculate(curveJoystick(-driverController.getLeftX())) * overclock;
+			? yFilter.calculate(curveJoystick(-driverController.getLeftX())) * translationSpeed
+			: -yFilter.calculate(curveJoystick(-driverController.getLeftX())) * translationSpeed;
 
-		double rot = Math.pow(MathUtil.applyDeadband(-driverController.getRightX(), 0.05), 3) * Math.PI * 0.90;
+		double rot = Math.pow(MathUtil.applyDeadband(-driverController.getRightX(), 0.05), 3) * Math.PI;
 
 		ChassisSpeeds speeds = new ChassisSpeeds(xSpeed, ySpeed, rot);
 
@@ -322,6 +326,18 @@ public class Robot extends TimedRobot
 	private ChassisSpeeds assistDriver()
 	{
 		var results = this.driverAssistance.assistDriver(this.driverController::getXButton);
+		if (results.recommendedCommand != null && this.semiAutomatedCommand == null && this.driverController.getXButtonPressed())
+		{
+			this.semiAutomatedCommand = results.recommendedCommand.finallyDo(() -> this.semiAutomatedCommand = null);
+			this.semiAutomatedCommand.schedule();
+			SmartDashboard.putString("DriverAssistance/Command", this.semiAutomatedCommand.getName());
+			LEDController.getDefault().setProgram(LEDPrograms.BeginAutoCommand);
+		}
+		else
+		{
+			SmartDashboard.putString("DriverAssistance/Command", "None");
+		}
+		SmartDashboard.putString("DriverAssistance/Speeds", results.speeds.toString());
 
 		return ChassisSpeedsUtils.isEmpty(results.speeds) ? null : results.speeds;
 	}

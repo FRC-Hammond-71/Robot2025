@@ -43,8 +43,7 @@ public class GameCommands
     public final Command IntakeAlgae()
     {
         return CommandUtils.withName("IntakeAlgae", 
-            r.launcher.cmdAutoIntakeAlgae()
-            .withTimeout(3));
+            r.launcher.cmdAutoIntakeAlgae().withTimeout(3));
     }
 
     public final Command ScoreProcessor()
@@ -56,13 +55,13 @@ public class GameCommands
     {
         return CommandUtils.withName("IntakeFromCS", Commands
             .parallel(r.elevator.RaiseToCSIntake(), r.arm.PivotToStowed())
-            .andThen(r.launcher.cmdIntakeCoral().withTimeout(4)));
+            .andThen(r.launcher.cmdIntakeCoral()));
     }
 
     public final Command ScoreCoralL3() 
     {
         return CommandUtils.withName("ScoreCoralL3", 
-            r.arm.makePivotCommand(Rotation2d.fromDegrees(180))
+            r.arm.PivotTo180()
             .andThen(r.launcher.cmdScoreCoral().withTimeout(1)));
     }
 

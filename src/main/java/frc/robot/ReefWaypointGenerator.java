@@ -18,10 +18,12 @@ public class ReefWaypointGenerator
         public Pose2d RightL4Coral;
     }
 
-    private static final double HEX_RADIUS = 0.87;
+    private static final double HEX_RADIUS = 0.9;
     private static final double HEX_CENTER_X = 4.48;
     private static final double HEX_CENTER_Y = 4.0;
-    private static final double SHIFT_AWAY_FROM_WALL = 0.42;
+    private static final double SHIFT_AWAY_FROM_WALL = 0.425;
+
+    private static Rotation2d ARM_SAG_ROTATION = Rotation2d.fromDegrees(0);
 
     private static Pose2d transformPoint(double centerX, double centerY, double faceAngle, double dx, double dy, Rotation2d relativeAngle) {
         // Convert the relative angle to an absolute angle by adding it to the face angle
@@ -51,19 +53,20 @@ public class ReefWaypointGenerator
 
             ReefEdgeWaypoints waypoints = new ReefEdgeWaypoints();
 
-            waypoints.AlgaeHigh = FieldConstants.FlipIfRequired(transformPoint(edgeCenterX, edgeCenterY, angle, SHIFT_AWAY_FROM_WALL, 0.17, Rotation2d.fromDegrees(-90)), Alliance.Blue);
-            waypoints.AlgaeLow = FieldConstants.FlipIfRequired(transformPoint(edgeCenterX, edgeCenterY, angle, SHIFT_AWAY_FROM_WALL + 0.05, -0.15, Rotation2d.fromDegrees(90)), Alliance.Blue);
+            waypoints.AlgaeHigh = FieldConstants.FlipIfRequired(transformPoint(edgeCenterX, edgeCenterY, angle, SHIFT_AWAY_FROM_WALL - 0.127, 0.17 + 0.127 + 0.0381, Rotation2d.fromDegrees(-90).minus(ARM_SAG_ROTATION)), Alliance.Blue);
+            waypoints.AlgaeLow = FieldConstants.FlipIfRequired(transformPoint(edgeCenterX, edgeCenterY, angle, SHIFT_AWAY_FROM_WALL - 0.127, -0.15 + 0.0127, Rotation2d.fromDegrees(90).minus(ARM_SAG_ROTATION)), Alliance.Blue);
             
-            waypoints.LeftL4Coral = FieldConstants.FlipIfRequired(transformPoint(edgeCenterX, edgeCenterY, angle, SHIFT_AWAY_FROM_WALL + 0.28, -0.20, Rotation2d.fromDegrees(180)), Alliance.Blue);
-            waypoints.RightL4Coral = FieldConstants.FlipIfRequired(transformPoint(edgeCenterX, edgeCenterY, angle, SHIFT_AWAY_FROM_WALL + 0.28, -0.20 + 0.3302, Rotation2d.fromDegrees(180)), Alliance.Blue);
+            waypoints.LeftL4Coral = FieldConstants.FlipIfRequired(transformPoint(edgeCenterX, edgeCenterY, angle, SHIFT_AWAY_FROM_WALL + 0.28 - 0.0508, -0.20 - 0.0508 + 0.0125, Rotation2d.fromDegrees(180).minus(ARM_SAG_ROTATION)), Alliance.Blue);
+            waypoints.RightL4Coral = FieldConstants.FlipIfRequired(transformPoint(edgeCenterX, edgeCenterY, angle, SHIFT_AWAY_FROM_WALL + 0.28 - 0.0508, -0.20 + 0.3302 - 0.0762 + 0.00625, Rotation2d.fromDegrees(180).minus(ARM_SAG_ROTATION)), Alliance.Blue);
             
-            waypoints.RightL3Coral = FieldConstants.FlipIfRequired(transformPoint(edgeCenterX, edgeCenterY, angle, SHIFT_AWAY_FROM_WALL + 0.19, 0.07, Rotation2d.fromDegrees(180)), Alliance.Blue);
-            waypoints.LeftL3Coral = FieldConstants.FlipIfRequired(transformPoint(edgeCenterX, edgeCenterY, angle, SHIFT_AWAY_FROM_WALL + 0.19, 0.07 - 0.3302, Rotation2d.fromDegrees(180)), Alliance.Blue);
+            waypoints.RightL3Coral = FieldConstants.FlipIfRequired(transformPoint(edgeCenterX, edgeCenterY, angle, SHIFT_AWAY_FROM_WALL + 0.19 - 0.0508, 0.07 - 0.1016 + 0.0762 - 0.0254 + 0.03, Rotation2d.fromDegrees(180).minus(ARM_SAG_ROTATION)), Alliance.Blue);
+            waypoints.LeftL3Coral = FieldConstants.FlipIfRequired(transformPoint(edgeCenterX, edgeCenterY, angle, SHIFT_AWAY_FROM_WALL + 0.19 - 0.0508, 0.07 - 0.3302 - 0.1016 + 0.0762, Rotation2d.fromDegrees(180).minus(ARM_SAG_ROTATION)), Alliance.Blue);
 
             // Add the generated waypoints to the list
             poses.add(waypoints);
         }
     
+
         return poses;
     }
 

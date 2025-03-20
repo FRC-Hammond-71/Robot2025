@@ -20,10 +20,10 @@ import edu.wpi.first.math.filter.MedianFilter;
 public class Limelight {
     protected static final Map<String, Limelight> RegisteredLimelights = new HashMap<>();
 
-    private static final double MAX_DISTANCE_PER_CYCLE = Drivetrain.kMaxSpeed * 2 * Robot.kDefaultPeriod;
-    private static final double MAX_VELOCITY_CHANGE_PER_CYCLE = SwerveModule.kMaxAcceleration  * 2 * Robot.kDefaultPeriod;
-    private static final double MAX_ROTATION_CHANGE_PER_CYCLE = Drivetrain.kMaxAngularSpeed * 2 * Robot.kDefaultPeriod;
-    private static final int sampleSize = 5;
+    private static final double MAX_DISTANCE_PER_CYCLE = Drivetrain.kMaxSpeed * 3 * Robot.kDefaultPeriod;
+    private static final double MAX_VELOCITY_CHANGE_PER_CYCLE = SwerveModule.kMaxAcceleration  * 3 * Robot.kDefaultPeriod;
+    private static final double MAX_ROTATION_CHANGE_PER_CYCLE = Drivetrain.kMaxAngularSpeed * 3 * Robot.kDefaultPeriod;
+    private static final int sampleSize = 3;
 
     public final String name;
 
@@ -100,10 +100,7 @@ public class Limelight {
             double velocity = distance / Robot.kDefaultPeriod;
             double velocityChange = Math.abs(velocity - robotSpeeds.vxMetersPerSecond);
     
-            // Rotation
-            double rotationChange = Math.abs(estimatedPose.getRotation().getRadians() - lastFusedPose.getRotation().getRadians());
-    
-            if (distance > MAX_DISTANCE_PER_CYCLE || velocityChange > MAX_VELOCITY_CHANGE_PER_CYCLE || rotationChange > MAX_ROTATION_CHANGE_PER_CYCLE) {
+            if (distance > MAX_DISTANCE_PER_CYCLE || velocityChange > MAX_VELOCITY_CHANGE_PER_CYCLE) {
                 lastFusedPose = estimatedPose;
                 return Optional.empty(); // Reject the estimate
             }

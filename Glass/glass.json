@@ -1,0 +1,96 @@
+{
+  "NetworkTables": {
+    "retained": {
+      "SmartDashboard": {
+        "Starting Positions": {
+          "open": false
+        },
+        "open": false
+      }
+    },
+    "transitory": {
+      "SmartDashboard": {
+        "DriveSubsystem": {
+          "open": false
+        }
+      }
+    },
+    "types": {
+      "/FMSInfo": "FMSInfo",
+      "/SmartDashboard/Arm/PID": "ProfiledPIDController",
+      "/SmartDashboard/Auto Chooser": "String Chooser",
+      "/SmartDashboard/Auto Chooser2": "String Chooser",
+      "/SmartDashboard/Driver Assistance": "Subsystem",
+      "/SmartDashboard/Elevator/PID": "ProfiledPIDController",
+      "/SmartDashboard/Field": "Field2d",
+      "/SmartDashboard/Initial Pose Chooser": "String Chooser",
+      "/SmartDashboard/LED Preview": "Mechanism2d",
+      "/SmartDashboard/Mech2D": "Mechanism2d",
+      "/SmartDashboard/PathPlanner": "Alerts"
+    },
+    "windows": {
+      "/SmartDashboard/Arm/PID": {
+        "window": {
+          "visible": true
+        }
+      },
+      "/SmartDashboard/Auto Chooser": {
+        "window": {
+          "visible": true
+        }
+      },
+      "/SmartDashboard/Driver Assistance": {
+        "window": {
+          "visible": true
+        }
+      },
+      "/SmartDashboard/Elevator/PID": {
+        "window": {
+          "visible": true
+        }
+      },
+      "/SmartDashboard/Initial Pose Chooser": {
+        "window": {
+          "visible": true
+        }
+      },
+      "/SmartDashboard/LED Preview": {
+        "window": {
+          "visible": true
+        }
+      },
+      "/SmartDashboard/Mech2D": {
+        "window": {
+          "visible": true
+        }
+      }
+    }
+  },
+  "NetworkTables Settings": {
+    "dsClient": false,
+    "mode": "Client (NT4)",
+    "serverTeam": "71",
+    "visible": false
+  },
+  "NetworkTables View": {
+    "visible": false
+  },
+  "Plots": {
+    "Plot <0>": {
+      "plots": [
+        {
+          "backgroundColor": [
+            0.05999999865889549,
+            0.05999999865889549,
+            0.05999999865889549,
+            0.9399999976158142
+          ],
+          "height": 338
+        }
+      ],
+      "window": {
+        "visible": false
+      }
+    }
+  }
+}

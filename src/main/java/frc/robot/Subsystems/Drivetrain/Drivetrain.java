@@ -57,7 +57,7 @@ public class Drivetrain extends SubsystemBase {
 	public final Field2d m_field = new Field2d();
 
 	public static final double kMaxSpeed = 4.3; // in MP/s
-	public static final double kMaxAngularSpeed = Math.PI * 2;
+	public static final double kMaxAngularSpeed = Math.PI * 1.5;
 
 	private final Translation2d m_frontLeftLocation = new Translation2d(0.2635, 0.2635);
 	private final Translation2d m_frontRightLocation = new Translation2d(0.2635, -0.2635);
@@ -71,7 +71,7 @@ public class Drivetrain extends SubsystemBase {
 	private boolean isChangingRotationLast = true;
 
 	// Lower when we add simple feed forward!!!!!!
-	private final PIDController m_headingPID = new PIDController(1.6, 0, 0.005);
+	private final PIDController m_headingPID = new PIDController(1.7, 0, 0.005);
 
 	private final Pigeon2 m_gyro = new Pigeon2(30);
 
@@ -112,7 +112,7 @@ public class Drivetrain extends SubsystemBase {
 			// Odometry Stds
 			VecBuilder.fill(0.1, 0.1, Math.toRadians(0)),
 			// Vision Stds
-			VecBuilder.fill(3, 3, Math.toRadians(30)));
+			VecBuilder.fill(2.5, 2.5, Math.toRadians(30)));
 
 	public boolean resetPoseWithLimelight()
 	{
@@ -135,14 +135,14 @@ public class Drivetrain extends SubsystemBase {
 		this.m_headingPID.setSetpoint(initialPose.getRotation().getRadians());
 		this.posePublisher.set(initialPose);
 		this.m_field.setRobotPose(initialPose);
-		this.isChangingRotationLast = false;
+		this.isChangingRotationLast = true;
 	}
 
 	public Drivetrain() {
 		SmartDashboard.putData("Field", m_field);
 
 		this.m_headingPID.enableContinuousInput(-Math.PI, Math.PI);
-		this.m_headingPID.setTolerance(4 * (Math.PI / 180));
+		this.m_headingPID.setTolerance(3 * (Math.PI / 180));
 
 		setupPathPlanner();
 	}
@@ -158,11 +158,13 @@ public class Drivetrain extends SubsystemBase {
 		}
 		AutoBuilder.configure(
 			this::getPose,
-			this::resetPose,
+			(pose) -> {
+				// this.resetPose(pose);	
+			},
 			this::getRelativeSpeeds,
 			(speeds) -> this.Drive(speeds, false),
 			new PPHolonomicDriveController(
-					new PIDConstants(8.0, 0.0, 0.0), // Translation PID constants
+					new PIDConstants(4.0, 0.0, 0.0), // Translation PID constants
 					new PIDConstants(Math.PI, 0.0, 0.0) // Rotation PID constants
 			),
 			config,
@@ -257,12 +259,14 @@ public class Drivetrain extends SubsystemBase {
 	public void periodic() 
 	{
 		this.updateOdometry();
+		this.dashboardPrint();
+
+        if (DriverStation.isDisabled()) return;
+
 		this.m_frontLeft.update();
 		this.m_frontRight.update();
 		this.m_backLeft.update();
 		this.m_backRight.update();
-		this.dashboardPrint();
-		this.updateOdometry();
 	}
 
 	public SwerveModuleState[] getMeasuredModulesStates() {
@@ -291,10 +295,7 @@ public class Drivetrain extends SubsystemBase {
 
 	public void resetGyro(Rotation2d rot)
 	{
-		this.m_gyro.reset();
-		this.m_gyro.setYaw(rot.getDegrees());
-		this.m_headingPID.reset();
-		this.m_headingPID.setSetpoint(rot.getRadians());
+		this.resetPose(new Pose2d(this.getPose().getTranslation(), rot));
 	}
 
 	public void Stop() {
@@ -310,24 +311,9 @@ public class Drivetrain extends SubsystemBase {
 	}
 
 
-	private boolean wasSlipping = false;
-
 	/** Updates the field relative position of the robot. */
 	public void updateOdometry() 
 	{
-		// boolean isSlipping = this.m_backLeft.isSlipping() || this.m_backRight.isSlipping() || this.m_frontLeft.isSlipping() || this.m_frontRight.isSlipping();
-		// SmartDashboard.putBoolean("Drivetrain/isSlipping", isSlipping);
-		// if (!wasSlipping && isSlipping)
-		// {
-		// 	this.wasSlipping = true;
-		// 	this.m_odometry.setVisionMeasurementStdDevs(VecBuilder.fill(0.5, 0.5, Math.toRadians(10)));
-		// }
-		// else if (wasSlipping && !isSlipping)
-		// {
-		// 	this.wasSlipping = false;
-		// 	this.m_odometry.setVisionMeasurementStdDevs(VecBuilder.fill(1.5, 1.5, Math.toRadians(30)));
-		// }
-		
 		this.m_odometry.update(this.getGyroHeading(), new SwerveModulePosition[] {
 			m_frontLeft.getPosition(),
 			m_frontRight.getPosition(),
@@ -340,6 +326,8 @@ public class Drivetrain extends SubsystemBase {
 		ChassisSpeeds speeds = this.getMeasuredSpeeds();
 		Limelight limelight = Limelight.useDevice("limelight");
 
+		boolean useVision = SmartDashboard.getBoolean("Drivetrain/useVision", true);
+
 		Optional<Pose2d> rawResult = limelight.getRawEstimatedPose();
 		Optional<Pose2d> megaTagResult = limelight.getMegaTag2EstimatedPose(gyroHeading, speeds);
 		Optional<Pose2d> stablePose = limelight.getStableEstimatedPose(estimatedPose, gyroHeading, speeds);
@@ -351,13 +339,17 @@ public class Drivetrain extends SubsystemBase {
 		if (megaTagResult.isPresent())
 		{
 			this.llMegaTagPosePublisher.set(megaTagResult.get());
+			this.m_odometry.addVisionMeasurement(new Pose2d(megaTagResult.get().getTranslation(), gyroHeading), Timer.getFPGATimestamp() - limelight.getLatencyInSeconds());
 		}
 		if (stablePose.isPresent())
 		{
 			Pose2d newStablePose = new Pose2d(stablePose.get().getTranslation(), estimatedPose.getRotation());
 
 			// Only contribute the stablePose to Pose Estimation!
-			this.m_odometry.addVisionMeasurement(newStablePose, Timer.getFPGATimestamp() - limelight.getLatencyInSeconds());
+			if (useVision)
+			{
+				// this.m_odometry.addVisionMeasurement(newStablePose, Timer.getFPGATimestamp() - limelight.getLatencyInSeconds());
+			}
 			this.llStablePosePublisher.set(newStablePose);
 		}
 		this.posePublisher.set(this.getPose());
@@ -377,18 +369,17 @@ public class Drivetrain extends SubsystemBase {
 	}
 
 	private void dashboardPrintModuleSpeeds(String name, SwerveModule module) {
-		SmartDashboard.putNumber(String.format("%s Desired-Speed", name), module.getDesiredState().speedMetersPerSecond);
-		SmartDashboard.putNumber(String.format("%s Measured-Speed", name),module.getMeasuredState().speedMetersPerSecond);
+		SmartDashboard.putNumber(String.format("Drivetrain/Module %s Desired-Speed", name), module.getDesiredState().speedMetersPerSecond);
+		SmartDashboard.putNumber(String.format("Drivetrain/%s Measured-Speed", name),module.getMeasuredState().speedMetersPerSecond);
 	}
 
 	public void dashboardPrint() {
-		SmartDashboard.putNumber("Heading", this.getPose().getRotation().getDegrees());
-		SmartDashboard.putNumber("Gyro Heading", this.getGyroHeading().getDegrees());
+		SmartDashboard.putNumber("Drivetrain/Heading", this.getPose().getRotation().getDegrees());
+		SmartDashboard.putNumber("Drivetrain/GyroHeading", this.getGyroHeading().getDegrees());
 
 		dashboardPrintModuleSpeeds("FL", m_frontLeft);
 		dashboardPrintModuleSpeeds("FR", m_frontRight);
 		dashboardPrintModuleSpeeds("BL", m_backLeft);
 		dashboardPrintModuleSpeeds("BR", m_backRight);
 	}
-
 }

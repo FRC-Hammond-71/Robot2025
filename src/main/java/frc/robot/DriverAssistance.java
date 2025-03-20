@@ -5,6 +5,8 @@ import java.util.function.BooleanSupplier;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -18,7 +20,7 @@ import frc.robot.Attractors.Controllers.ReefPoseController;
 import frc.robot.Commands.CommandUtils;
 import frc.robot.Utilities.ChassisSpeedsUtils;
 
-public class DriverAssistance 
+public class DriverAssistance
 {
     /** Encapsulates driver assist settings */
     private static class DriverAssistConfig {
@@ -47,7 +49,7 @@ public class DriverAssistance
 
     private final ReefPoseController[] reefEdgeAttractors;
     public final FaceController[] coralStationAttractors;
-    // public final FaceController netAttractor;
+    public final FaceController netAttractor;
     public final FaceController processorAttractor;
 
     private Robot r;
@@ -76,13 +78,6 @@ public class DriverAssistance
                 new FaceController(waypoints.RightL4Coral.getRotation(), new PointAttractor(waypoints.RightL4Coral.getTranslation(), reefMinDistanceInMeters))
 
             );
-
-            // this.r.swerve.m_field.getObject(String.format("%d LeftL4Coral", i)).setPose(waypoints.LeftL4Coral);
-            // this.r.swerve.m_field.getObject(String.format("%d RightL4Coral", i)).setPose(waypoints.RightL4Coral);
-            // this.r.swerve.m_field.getObject(String.format("%d LeftL3Coral", i)).setPose(waypoints.LeftL3Coral);
-            // this.r.swerve.m_field.getObject(String.format("%d RightL3Coral", i)).setPose(waypoints.RightL3Coral);
-            // this.r.swerve.m_field.getObject(String.format("%d AlgaeHigh", i)).setPose(waypoints.AlgaeHigh);
-            // this.r.swerve.m_field.getObject(String.format("%d AlgaeLow", i)).setPose(waypoints.AlgaeLow);
         }
 
         this.r.swerve.m_field.getObject("Net Scoring").setPoses(
@@ -97,7 +92,7 @@ public class DriverAssistance
             new FaceController(coralStationRight.getRotation(), new PointAttractor(coralStationRight.getTranslation(), 1))
         };
 
-        // this.netAttractor = new FaceController(FieldConstants.AlgaeNetRotation(), new LineAttractor(FieldConstants.AlgaeNetLine(), 1, 0));
+        this.netAttractor = new FaceController(FieldConstants.AlgaeNetRotation(), new LineAttractor(FieldConstants.AlgaeNetLine(), 1));
 
         this.processorAttractor = new FaceController(FieldConstants.CoralProcessor().getRotation(), new PointAttractor(FieldConstants.CoralProcessor().getTranslation(), 1));
     }
@@ -133,19 +128,15 @@ public class DriverAssistance
             return coralStationAssist;
         }
 
-        // DriverAssistOutput netAssist = assistNet(rPose, onlyWhilePredicate);
-        // if (!ChassisSpeedsUtils.isEmpty(netAssist.speeds)) {
-        //     this.r.swerve.m_field.getObject("nearestAttractor").setPose(new Pose2d(this.netAttractor.getPosition(rPose), Rotation2d.fromDegrees(0)));
-        //     return netAssist;
-        // }
+        DriverAssistOutput netAssist = assistNet(rPose, onlyWhilePredicate);
+        if (!ChassisSpeedsUtils.isEmpty(netAssist.speeds)) {
+            return netAssist;
+        }
 
         DriverAssistOutput processorAssist = assistProcessor(rPose, onlyWhilePredicate);
         if (!ChassisSpeedsUtils.isEmpty(processorAssist.speeds)) {
-            this.r.swerve.m_field.getObject("nearestAttractor").setPose(new Pose2d(this.processorAttractor.getPosition(rPose), Rotation2d.fromDegrees(0)));
             return processorAssist;
         }
-
-        // this.r.swerve.m_field.getObject("nearestAttractor").setPose(new Pose2d(100, 100, Rotation2d.fromDegrees(0)));
 
         return new DriverAssistOutput(new ChassisSpeeds(), null); // No assistance needed
     }
@@ -154,10 +145,6 @@ public class DriverAssistance
     {
         FaceController nearestController = Attractor.getNearestAttractor(rPose.getTranslation(), this.coralStationAttractors);
 
-        if (nearestController != null)
-        {
-            this.r.swerve.m_field.getObject("nearestAttractor").setPose(new Pose2d(nearestController.getPosition(rPose), Rotation2d.fromDegrees(0)));
-        }
         if (nearestController != null && Attractor.isInRange(rPose.getTranslation(), nearestController)) {
             ChassisSpeeds speeds = nearestController.calculate(rPose);
             
@@ -173,17 +160,17 @@ public class DriverAssistance
         return new DriverAssistOutput(new ChassisSpeeds(), null);
     }
 
-    // private DriverAssistOutput assistNet(Pose2d rPose, BooleanSupplier onlyWhilePredicate)
-    // {
-    //     return new DriverAssistOutput(
-    //         this.netAttractor.calculate(rPose),
-    //         this.r.gameCommands.ScoreNet()
-    //             .onlyWhile(onlyWhilePredicate)
-    //             .finallyDo(() -> {
-    //                 this.r.arm.turnToStowed();
-    //                 this.r.elevator.setPositions(0);
-    //             }));
-    // }
+    private DriverAssistOutput assistNet(Pose2d rPose, BooleanSupplier onlyWhilePredicate)
+    {
+        return new DriverAssistOutput(
+            this.netAttractor.calculate(rPose),
+            this.r.gameCommands.ScoreNet()
+                .onlyWhile(onlyWhilePredicate)
+                .finallyDo(() -> {
+                    this.r.arm.turnToStowed();
+                    this.r.elevator.setPositions(0);
+                }));
+    }
 
     private DriverAssistOutput assistProcessor(Pose2d rPose, BooleanSupplier onlyWhilePredicate)
     {
@@ -243,7 +230,10 @@ public class DriverAssistance
 
         if (config.reefAlgaePosition == 0)
         {
-            return this.r.gameCommands.IntakeLowerAlgae().onlyWhile(onlyWhilePredicate);
+            return this.r.gameCommands
+                .IntakeLowerAlgae()
+                .onlyWhile(onlyWhilePredicate)
+                .finallyDo(() -> r.arm.PivotToStowed());
         }
         else if (config.reefAlgaePosition == 1)
         {
@@ -251,10 +241,12 @@ public class DriverAssistance
                 .andThen(Commands.parallel(
                     r.launcher.cmdIntakeAlgae(),
                     r.arm.PivotToHigherAlgae()
-                ))
+                    ))
                 .onlyWhile(onlyWhilePredicate)
-                .andThen(r.elevator.makeRaiseToCommand(r.elevator.getHeight() + 2))
-                .andThen(r.arm.PivotTo180()));
+                .finallyDo(() -> {
+                    // r.elevator.setPositions(r.elevator.getHeight() + 4);
+                    r.arm.setTargetRotation(r.arm.k180Angle);
+                }));
         }
 
         switch (config.reefCoralLevel) {

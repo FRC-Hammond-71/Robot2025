@@ -16,12 +16,12 @@
     },
     {
       "anchor": {
-        "x": 5.292,
-        "y": 2.765
+        "x": 4.965,
+        "y": 2.589
       },
       "prevControl": {
-        "x": 5.507928579815423,
-        "y": 2.639004569849163
+        "x": 5.180928096053442,
+        "y": 2.4630037407907075
       },
       "nextControl": null,
       "isLocked": false,
@@ -48,21 +48,21 @@
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 1.0,
-    "maxAcceleration": 1.0,
+    "maxAcceleration": 0.5,
     "maxAngularVelocity": 360.0,
-    "maxAngularAcceleration": 90.0,
+    "maxAngularAcceleration": 120.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 122.0
+    "rotation": 119.99999999999999
   },
   "reversed": false,
   "folder": "Base-R",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 179.4299992551286
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }

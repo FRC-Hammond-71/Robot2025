@@ -9,7 +9,7 @@
       "prevControl": null,
       "nextControl": {
         "x": 5.99007711039222,
-        "y": 1.168851461042392
+        "y": 1.1688514610423917
       },
       "isLocked": false,
       "linkedName": "R4AH"
@@ -60,9 +60,9 @@
   ],
   "globalConstraints": {
     "maxVelocity": 1.0,
-    "maxAcceleration": 1.0,
+    "maxAcceleration": 0.5,
     "maxAngularVelocity": 360.0,
-    "maxAngularAcceleration": 90.0,
+    "maxAngularAcceleration": 120.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },

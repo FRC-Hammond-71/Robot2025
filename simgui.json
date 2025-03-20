@@ -1,15 +1,40 @@
 {
+  "HALProvider": {
+    "Addressable LEDs": {
+      "0": {
+        "columns": 2
+      },
+      "window": {
+        "visible": true
+      }
+    },
+    "Other Devices": {
+      "window": {
+        "visible": false
+      }
+    }
+  },
   "NTProvider": {
     "types": {
       "/FMSInfo": "FMSInfo",
       "/SmartDashboard/Alerts": "Alerts",
+      "/SmartDashboard/Arm/PID": "ProfiledPIDController",
       "/SmartDashboard/Auto Chooser": "String Chooser",
+      "/SmartDashboard/Auto Chooser2": "String Chooser",
+      "/SmartDashboard/Elevator/PID": "ProfiledPIDController",
       "/SmartDashboard/Field": "Field2d",
       "/SmartDashboard/Initial Pose Chooser": "String Chooser",
-      "/SmartDashboard/Mech2D": "Mechanism2d"
+      "/SmartDashboard/LED Preview": "Mechanism2d",
+      "/SmartDashboard/Mech2D": "Mechanism2d",
+      "/SmartDashboard/PathPlanner": "Alerts"
     },
     "windows": {
-      "/SmartDashboard/Auto Chooser": {
+      "/SmartDashboard/Arm/PID": {
+        "window": {
+          "visible": true
+        }
+      },
+      "/SmartDashboard/Initial Pose Chooser": {
         "window": {
           "visible": true
         }
@@ -18,5 +43,8 @@
   },
   "NetworkTables Info": {
     "visible": true
+  },
+  "NetworkTables View": {
+    "visible": false
   }
 }

@@ -1,12 +1,10 @@
 package frc.robot.Subsystems.Elevator;
 
 import edu.wpi.first.math.controller.ElevatorFeedforward;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -15,15 +13,11 @@ import frc.robot.SparkConfigurations;
 import frc.robot.Commands.CommandUtils;
 
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.config.SparkMaxConfig;
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-import com.revrobotics.spark.SparkBase.ResetMode;
 
 public class Elevator extends SubsystemBase {
 
-    public static final double kMaxHeight = 23;
+    public static final double kMaxHeight = 22.5;
     public static final double kMinHeight = 0;
 
     private static final double kGearing = 20;
@@ -37,8 +31,8 @@ public class Elevator extends SubsystemBase {
     private final SparkMax elevatorMotor;
     private final Encoder elevatorEncoder;
 
-    private final ProfiledPIDController PID = new ProfiledPIDController(0.35, 0, 0.0005, new Constraints(23, 12));
-    private final ElevatorFeedforward feedforward = new ElevatorFeedforward(0, 0.1, 0.9, 0);
+    private final ProfiledPIDController PID = new ProfiledPIDController(0.22, 0, 0.0005, new Constraints(45, 45));
+    private final ElevatorFeedforward feedforward = new ElevatorFeedforward(0.01, 0.05, 1.5, 0);
 
     /**
      * Desired elevator height in inches!
@@ -48,7 +42,7 @@ public class Elevator extends SubsystemBase {
     public static final double kL1Height = 5;
     public static final double kL2Height = 3;
     public static final double kL3Height = 17;
-    public static final double kL4Height = 23;
+    public static final double kL4Height = 22.5;
     public static final double kStowHeight = 0;
     public static final double kLowerAlgaeHeight = 11;
     public static final double kNetHeight = 22;
@@ -77,6 +71,8 @@ public class Elevator extends SubsystemBase {
         this.PID.setTolerance(0.5);
 
         SparkConfigurations.ApplyConfigPersistNoReset(elevatorMotor, SparkConfigurations.CoastMode);
+
+        SmartDashboard.putData("Elevator/PID", this.PID);
     }
 
     public Command makeRaiseToCommand(double heightInInches)
@@ -116,10 +112,13 @@ public class Elevator extends SubsystemBase {
     @Override
     public void periodic() {
 
-        SmartDashboard.putNumber("Elevator/Height", this.getHeight());
+        if (DriverStation.isDisabled()) return;
+
+        SmartDashboard.putNumber("Elevator/Amps", this.elevatorMotor.getOutputCurrent());
 
         double PIDEffort = this.PID.calculate(this.getHeight(), this.targetPosition);
 
+        SmartDashboard.putNumber("Elevator/PIDEffort", this.elevatorMotor.getOutputCurrent());
 
         if (this.getHeight() >= kMaxHeight && PIDEffort > 0) {
 
@@ -132,9 +131,6 @@ public class Elevator extends SubsystemBase {
             this.elevatorMotor.stopMotor();
             return;
         }
-
-        SmartDashboard.putNumber("Elevator Measured Speed", -this.elevatorEncoder.getRate() / 60 * distancePerPulse);
-        SmartDashboard.putNumber("Elevator Desired Speed", PIDEffort);
 
         this.elevatorMotor.setVoltage(feedforward.calculate(PIDEffort) * kGearing);
     }
