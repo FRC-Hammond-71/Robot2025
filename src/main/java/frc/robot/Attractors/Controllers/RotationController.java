@@ -14,7 +14,7 @@ public class RotationController
      * Attractor should be fully rotated by this magnitude (from 0-1) instead of at 1 (closest distance).
      */
     private double rotationBuffer = 1;
-    private PIDController rotationPID = new PIDController(2.5, 0, 0);
+    private PIDController rotationPID = new PIDController(2.8, 0, 0);
 
     public final Attractor referenceAttractor;
 

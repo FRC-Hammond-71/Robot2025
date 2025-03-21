@@ -7,11 +7,17 @@
       "SmartDashboard": {
         "Starting Positions": {
           "open": false
-        }
+        },
+        "open": false
       }
     },
     "transitory": {
       "SmartDashboard": {
+        "Arm Visualization": {
+          "double[]##v_/SmartDashboard/Arm Visualization/dims": {
+            "open": false
+          }
+        },
         "DriveSubsystem": {
           "open": false
         },
@@ -48,14 +54,21 @@
           "visible": true
         }
       },
-      "/SmartDashboard/Driver Assistance": {
+      "/SmartDashboard/Elevator/PID": {
         "window": {
           "visible": true
         }
       },
-      "/SmartDashboard/Elevator/PID": {
-        "window": {
-          "visible": true
+      "/SmartDashboard/Field": {
+        "Robot - IMU": {
+          "arrowSize": 0,
+          "weight": 0.0
+        },
+        "Robot - Intake Vision": {
+          "color": []
+        },
+        "Robot - Launcher Vision": {
+          "color": []
         }
       },
       "/SmartDashboard/Initial Pose Chooser": {
@@ -79,6 +92,9 @@
     "dsClient": false,
     "mode": "Client (NT4)",
     "serverTeam": "71",
+    "visible": false
+  },
+  "NetworkTables View": {
     "visible": false
   },
   "Plots": {

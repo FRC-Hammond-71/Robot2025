@@ -1,20 +1,20 @@
 {
   "Docking": {
     "Data": [
-      "DockSpace ID=0x8B93E3BD Window=0xA787BDB4 Pos=0,19 Size=32,32 CentralNode=1"
+      "DockSpace ID=0x8B93E3BD Window=0xA787BDB4 Pos=0,22 Size=760,959 CentralNode=1"
     ]
   },
   "MainWindow": {
     "GLOBAL": {
       "font": "Proggy Dotted",
       "fps": "30",
-      "height": "0",
+      "height": "981",
       "maximized": "0",
       "style": "1",
       "userScale": "2",
-      "width": "0",
-      "xpos": "-32000",
-      "ypos": "-32000"
+      "width": "760",
+      "xpos": "1",
+      "ypos": "38"
     }
   },
   "Table": {
@@ -26,30 +26,40 @@
     }
   },
   "Window": {
+    "###/SmartDashboard/Arm Visualization": {
+      "Collapsed": "0",
+      "Pos": "0,22",
+      "Size": "512,759"
+    },
     "###/SmartDashboard/Arm/PID": {
       "Collapsed": "0",
-      "Pos": "109,481",
-      "Size": "215,32"
+      "Pos": "109,496",
+      "Size": "243,240"
     },
     "###/SmartDashboard/Auto Chooser": {
       "Collapsed": "0",
-      "Pos": "105,173",
-      "Size": "246,32"
+      "Pos": "105,178",
+      "Size": "316,60"
     },
     "###/SmartDashboard/Auto Chooser2": {
       "Collapsed": "0",
       "Pos": "79,100",
       "Size": "254,54"
     },
+    "###/SmartDashboard/Auto Options": {
+      "Collapsed": "0",
+      "Pos": "783,607",
+      "Size": "316,60"
+    },
     "###/SmartDashboard/Driver Assistance": {
       "Collapsed": "0",
       "Pos": "111,703",
-      "Size": "278,32"
+      "Size": "296,78"
     },
     "###/SmartDashboard/Elevator/PID": {
       "Collapsed": "0",
       "Pos": "108,248",
-      "Size": "246,32"
+      "Size": "267,240"
     },
     "###/SmartDashboard/Field": {
       "Collapsed": "0",
@@ -59,7 +69,7 @@
     "###/SmartDashboard/Initial Pose Chooser": {
       "Collapsed": "0",
       "Pos": "104,114",
-      "Size": "296,32"
+      "Size": "316,60"
     },
     "###/SmartDashboard/LED Preview": {
       "Collapsed": "0",
@@ -75,6 +85,16 @@
       "Collapsed": "0",
       "Pos": "505,488",
       "Size": "339,155"
+    },
+    "###/SmartDashboard/Scheduler": {
+      "Collapsed": "0",
+      "Pos": "0,783",
+      "Size": "1728,208"
+    },
+    "###/SmartDashboard/Starting Positions": {
+      "Collapsed": "0",
+      "Pos": "1111,846",
+      "Size": "316,60"
     },
     "###NetworkTables": {
       "Collapsed": "0",
@@ -103,8 +123,8 @@
     },
     "DockSpaceViewport_11111111": {
       "Collapsed": "0",
-      "Pos": "0,19",
-      "Size": "32,32"
+      "Pos": "0,22",
+      "Size": "760,959"
     }
   }
 }

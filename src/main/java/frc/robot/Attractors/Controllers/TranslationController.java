@@ -10,8 +10,8 @@ public class TranslationController
 {
     public final Attractor referenceAttractor;
 
-    private PIDController translationXPID = new PIDController(2, 0, 0);
-    private PIDController translationYPID = new PIDController(2, 0, 0);
+    private PIDController translationXPID = new PIDController(2.5, 0, 0);
+    private PIDController translationYPID = new PIDController(2.5, 0, 0);
 
     public TranslationController(Attractor referenceAttractor)
     {
