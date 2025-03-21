@@ -59,16 +59,16 @@ public class Launcher extends SubsystemBase
     }
 
     public void intakeCoral() {
-        this.coralMotor.set(-0.6);
+        this.coralMotor.set(-0.4);
     }
     
     public void scoreCoral() 
     {
-        this.coralMotor.set(0.2);
+        this.coralMotor.set(0.3);
     }
 
     public void intakeAlgae() {
-        this.algaeMotor.set(1);
+        this.algaeMotor.set(0.8);
     }
 
     public void scoreAlgae() {

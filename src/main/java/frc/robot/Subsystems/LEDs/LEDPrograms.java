@@ -11,8 +11,8 @@ public class LEDPrograms
     public static final Distance LED_SPACING = edu.wpi.first.units.Units.Meters.of(1.0 / 60);
 
     public static final String WarningTogglePattern = "1,1";
-    public static final String RapidBlinkTogglePattern = "0.05,0.05,0.05,0.05";
-    public static final LEDPattern Rainbow = LEDPattern.rainbow(255, 180);
+    public static final String RapidBlinkTogglePattern = "0.08,0.08,0.08,0.08";
+    public static final LEDPattern Rainbow = LEDPattern.rainbow(255, 200);
 
     public static LEDProgram Warning = new LEDProgram(
         LEDPattern.solid(Color.kRed),
@@ -20,7 +20,7 @@ public class LEDPrograms
         true);
 
     public static LEDProgram PoseResetComplete = new LEDProgram(
-        LEDPattern.solid(Color.kGreen),
+        LEDPattern.solid(Color.kBlueViolet),
         RapidBlinkTogglePattern,
         false);
 

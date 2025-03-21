@@ -23,7 +23,7 @@ public class FieldConstants
     public static Pose2d BRightBlue = new Pose2d(7.248, 1.920, Rotation2d.fromDegrees(180));
     public static Pose2d BRightRed = FlippingUtil.flipFieldPose(BRightBlue);
 
-    public static Pose2d BMiddleBlue = new Pose2d(7.248, 3.543, Rotation2d.fromDegrees(180));
+    public static Pose2d BMiddleBlue = new Pose2d(7.248, 4, Rotation2d.fromDegrees(180));
     public static Pose2d BMiddleRed = FlippingUtil.flipFieldPose(BMiddleBlue);
 
     public static Pose2d BLeftBlue = new Pose2d(7.248, 6.00, Rotation2d.fromDegrees(180));
@@ -35,8 +35,8 @@ public class FieldConstants
     }
     public static final Rotation2d AlgaeNetRotation() { return FlipIfRequired(Rotation2d.fromDegrees(90), Alliance.Blue); };
 
-    public static final Pose2d CoralStationLeftLineup() { return FlipIfRequired(new Pose2d(1.085, 7.000, Rotation2d.fromDegrees(125)), Alliance.Blue);  }
-    public static final Pose2d CoralStationRightLineup() { return FlipIfRequired(new Pose2d(1.085, 1.062, Rotation2d.fromDegrees(-125)), Alliance.Blue);  }
+    public static final Pose2d CoralStationLeftLineup() { return FlipIfRequired(new Pose2d(1.085, 7.000, Rotation2d.fromDegrees(126)), Alliance.Blue);  }
+    public static final Pose2d CoralStationRightLineup() { return FlipIfRequired(new Pose2d(1.085, 1.062, Rotation2d.fromDegrees(-126)), Alliance.Blue);  }
 
     public static final Pose2d CoralProcessor()
     {

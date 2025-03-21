@@ -110,9 +110,9 @@ public class Drivetrain extends SubsystemBase {
 			}, new Pose2d(0, 0, new Rotation2d(0)),
 
 			// Odometry Stds
-			VecBuilder.fill(0.1, 0.1, Math.toRadians(0)),
+			VecBuilder.fill(0.05, 0.05, Math.toRadians(0)),
 			// Vision Stds
-			VecBuilder.fill(2.5, 2.5, Math.toRadians(30)));
+			VecBuilder.fill(2, 2, Math.toRadians(30)));
 
 	public boolean resetPoseWithLimelight()
 	{
@@ -164,8 +164,8 @@ public class Drivetrain extends SubsystemBase {
 			this::getRelativeSpeeds,
 			(speeds) -> this.Drive(speeds, false),
 			new PPHolonomicDriveController(
-					new PIDConstants(4.0, 0.0, 0.0), // Translation PID constants
-					new PIDConstants(Math.PI, 0.0, 0.0) // Rotation PID constants
+					new PIDConstants(3.3, 0.0, 0), // Translation PID constants
+					new PIDConstants(Math.PI * 1.6, 0.0, 0) // Rotation PID constants
 			),
 			config,
 			() -> {
@@ -207,6 +207,7 @@ public class Drivetrain extends SubsystemBase {
 		{
 			if (isChangingRotationLast) 
 			{
+				// TODO: Scale yaw velocity up or down depending on latency.
 				m_headingPID.setSetpoint(this.getPose().getRotation().getRadians());
 			}
 
@@ -339,7 +340,6 @@ public class Drivetrain extends SubsystemBase {
 		if (megaTagResult.isPresent())
 		{
 			this.llMegaTagPosePublisher.set(megaTagResult.get());
-			this.m_odometry.addVisionMeasurement(new Pose2d(megaTagResult.get().getTranslation(), gyroHeading), Timer.getFPGATimestamp() - limelight.getLatencyInSeconds());
 		}
 		if (stablePose.isPresent())
 		{
@@ -348,7 +348,7 @@ public class Drivetrain extends SubsystemBase {
 			// Only contribute the stablePose to Pose Estimation!
 			if (useVision)
 			{
-				// this.m_odometry.addVisionMeasurement(newStablePose, Timer.getFPGATimestamp() - limelight.getLatencyInSeconds());
+				this.m_odometry.addVisionMeasurement(newStablePose, Timer.getFPGATimestamp() - limelight.getLatencyInSeconds());
 			}
 			this.llStablePosePublisher.set(newStablePose);
 		}
@@ -358,6 +358,14 @@ public class Drivetrain extends SubsystemBase {
 	private Rotation2d getGyroHeading() {
 		// Gyro at zero should be facing the enemy side!
 		return Rotation2d.fromRadians(MathUtil.inputModulus(this.m_gyro.getYaw().getValue().in(Units.Radians), -Math.PI, Math.PI));
+	}
+
+	/**
+	 * @return Yaw-rate/speed per second.
+	 */
+	private Rotation2d getGyroVelocity()
+	{
+		return Rotation2d.fromDegrees(this.m_gyro.getAngularVelocityZWorld().getValue().in(Units.DegreesPerSecond));
 	}
 
 	public Pose2d getPose() {

@@ -70,9 +70,8 @@ public class Robot extends TimedRobot
 	private SendableChooser<Command> autoChooser;
 	private SendableChooser<Pose2d> initialPoseChooser = new SendableChooser<>();
 
-	private final LinearFilter xFilter = LinearFilter.singlePoleIIR(0.6, Robot.kDefaultPeriod);
-	private final LinearFilter yFilter = LinearFilter.singlePoleIIR(0.6, Robot.kDefaultPeriod);
-	private final LinearFilter rFilter = LinearFilter.singlePoleIIR(0.6, Robot.kDefaultPeriod);
+	private final LinearFilter xFilter = LinearFilter.singlePoleIIR(0.8, Robot.kDefaultPeriod);
+	private final LinearFilter yFilter = LinearFilter.singlePoleIIR(0.8, Robot.kDefaultPeriod);
 	public ChassisSpeeds speeds;
 
 	public GameCommands gameCommands;
@@ -89,8 +88,8 @@ public class Robot extends TimedRobot
 	@Override
 	public void robotInit() 
 	{
-		//#region Setup LED Controller
-		new LEDController(0, 60, true);		
+		//#region LEDs
+		new LEDController(9, 100, true);		
 		SmartDashboard.putData("LED Preview", LEDController.getDefault().ledPreview);
 		// Update LEDs every 100 ms!
 		// LED updating is ran on a separate thread instead.
@@ -116,6 +115,8 @@ public class Robot extends TimedRobot
 		initialPoseChooser.addOption("Right - Red", FieldConstants.BRightRed);
 
 		initialPoseChooser.onChange((chosenPose) -> {
+			// TODO: This may fix issues with resting pose, investigate later!
+			this.swerve.resetPose(chosenPose);
 			this.swerve.resetPose(chosenPose);
 			LEDController.getDefault().setProgram(LEDPrograms.PoseResetComplete);
 		});
@@ -124,21 +125,24 @@ public class Robot extends TimedRobot
 
 		this.gameCommands = new GameCommands(this);
 
-		//#region PathPlanner Configuration
+		//#region PathPlanner
 		NamedCommands.registerCommand("ScoreNet", this.gameCommands.ScoreNet());
 		NamedCommands.registerCommand("RaiseElevatorL1", this.elevator.RaiseToL1());
 		NamedCommands.registerCommand("RaiseElevatorL2", this.elevator.RaiseToL2());
 		NamedCommands.registerCommand("RaiseElevatorL3", this.elevator.RaiseToL3());
 		NamedCommands.registerCommand("RaiseElevatorL4", this.elevator.RaiseToL4());
 		NamedCommands.registerCommand("RaiseElevatorStow", this.elevator.RaiseToStowed());
+		NamedCommands.registerCommand("RaiseElevatorLowerAlgae", this.elevator.RaiseToLowerAlgae());
+		NamedCommands.registerCommand("RaiseElevatorCSIntake", this.elevator.RaiseToCSIntake());
 		NamedCommands.registerCommand("PivotToStowed", this.arm.PivotToStowed());
+		NamedCommands.registerCommand("PivotTo180", this.arm.PivotTo180());
 		NamedCommands.registerCommand("ScoreAlgae", this.launcher.cmdScoreAlgae());
 		NamedCommands.registerCommand("IntakeAlgae", this.launcher.cmdAutoIntakeAlgae());
 		NamedCommands.registerCommand("IntakeCoral", this.launcher.cmdIntakeCoral());
 		NamedCommands.registerCommand("ScoreCoral", this.launcher.cmdScoreCoral());
 		NamedCommands.registerCommand("TurnToNet", this.arm.PivotToNet());
 		NamedCommands.registerCommand("IntakeHigherAlgae", this.gameCommands.IntakeHigherAlgae());
-		NamedCommands.registerCommand("IntakeLowerAlgae", this.gameCommands.IntakeLowerAlgae());
+		NamedCommands.registerCommand("IntakeLowerAlgae", this.gameCommands.AutoIntakeLowerAlgae());
 		NamedCommands.registerCommand("IntakeFromCS", this.gameCommands.IntakeFromCS());
 		NamedCommands.registerCommand("ScoreCoralL3", this.gameCommands.ScoreCoralL3());
 		NamedCommands.registerCommand("ScoreCoralL4", this.gameCommands.ScoreCoraL4());
@@ -173,7 +177,7 @@ public class Robot extends TimedRobot
 
 		if (driverController.getStartButtonPressed()) 
 		{
-			// Use to counteract gyro-drift. MUST ALWAYS BE FACING TOWARDS RED ALLIANCE!
+			// Used to counteract gyro-drift. MUST ALWAYS BE FACING TOWARDS RED ALLIANCE!
 			this.swerve.resetGyro(Rotation2d.fromDegrees(0));
 
 			// CommandScheduler.getInstance().cancel(this.semiAutomatedCommand);
@@ -188,15 +192,16 @@ public class Robot extends TimedRobot
 	@Override
 
 	public void disabledInit() {
-		CommandScheduler.getInstance().cancelAll();
 		// This ensures the robot does not continue to move again after re-enabling!
 		// Clears the drive rate limiter and etc.
-		this.xFilter.reset();
-		this.yFilter.reset();
-		this.rFilter.reset();
+		CommandScheduler.getInstance().cancelAll();
 		this.swerve.Stop();
 		this.elevator.stop();
 		this.arm.stop();
+		this.xFilter.reset();
+		this.yFilter.reset();
+	
+		LEDController.getDefault().setProgram(LEDPrograms.Idle);
 	}
 
 	@Override
@@ -262,7 +267,7 @@ public class Robot extends TimedRobot
 			}
 			if(this.operatorController.getPOV() == 180)
 			{
-				gameCommands.IntakeLowerAlgae().onlyWhile(() -> this.operatorController.getPOV() == 180).schedule();
+				gameCommands.AutoIntakeLowerAlgae().onlyWhile(() -> this.operatorController.getPOV() == 180).schedule();
 			}
 			if(this.operatorController.getPOV() == 270)
 			{
@@ -286,15 +291,15 @@ public class Robot extends TimedRobot
 		}
 
 		var xSpeed = (onRedAlliance()) 
-			? xFilter.calculate(curveJoystick(-driverController.getLeftY())) * translationSpeed 
-			: -xFilter.calculate(curveJoystick(-driverController.getLeftY())) * translationSpeed;
+			? -xFilter.calculate(curveJoystick(-driverController.getLeftY())) * translationSpeed 
+			: xFilter.calculate(curveJoystick(-driverController.getLeftY())) * translationSpeed;
 
 		// Get the y speed or sideways/strafe speed. We are inverting this because
 		// we want a positive value when we pull to the left. Xbox controllers
 		// return positive values when you pull to the right by default.
 		final var ySpeed = (onRedAlliance()) 
-			? yFilter.calculate(curveJoystick(-driverController.getLeftX())) * translationSpeed
-			: -yFilter.calculate(curveJoystick(-driverController.getLeftX())) * translationSpeed;
+			? -yFilter.calculate(curveJoystick(-driverController.getLeftX())) * translationSpeed
+			: yFilter.calculate(curveJoystick(-driverController.getLeftX())) * translationSpeed;
 
 		double rot = Math.pow(MathUtil.applyDeadband(-driverController.getRightX(), 0.05), 3) * Math.PI;
 
@@ -328,7 +333,10 @@ public class Robot extends TimedRobot
 		var results = this.driverAssistance.assistDriver(this.driverController::getXButton);
 		if (results.recommendedCommand != null && this.semiAutomatedCommand == null && this.driverController.getXButtonPressed())
 		{
-			this.semiAutomatedCommand = results.recommendedCommand.finallyDo(() -> this.semiAutomatedCommand = null);
+			this.semiAutomatedCommand = results.recommendedCommand.finallyDo(() -> {
+				this.semiAutomatedCommand = null;
+				LEDController.getDefault().setProgram(LEDPrograms.Idle);
+			});
 			this.semiAutomatedCommand.schedule();
 			SmartDashboard.putString("DriverAssistance/Command", this.semiAutomatedCommand.getName());
 			LEDController.getDefault().setProgram(LEDPrograms.BeginAutoCommand);

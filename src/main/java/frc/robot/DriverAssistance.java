@@ -233,15 +233,12 @@ public class DriverAssistance
             return this.r.gameCommands
                 .IntakeLowerAlgae()
                 .onlyWhile(onlyWhilePredicate)
-                .finallyDo(() -> r.arm.PivotToStowed());
+                .finallyDo(() -> r.arm.turnToStowed());
         }
         else if (config.reefAlgaePosition == 1)
         {
-            return CommandUtils.withName("IntakeHigherAlgae", r.arm.PivotTo180()
-                .andThen(Commands.parallel(
-                    r.launcher.cmdIntakeAlgae(),
-                    r.arm.PivotToHigherAlgae()
-                    ))
+            return CommandUtils.withName("IntakeHigherAlgae", r.arm.PivotTo180().alongWith(r.elevator.RaiseToStowed())
+                .andThen(Commands.parallel(r.launcher.cmdIntakeAlgae(), r.arm.PivotToHigherAlgae()))
                 .onlyWhile(onlyWhilePredicate)
                 .finallyDo(() -> {
                     // r.elevator.setPositions(r.elevator.getHeight() + 4);

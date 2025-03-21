@@ -78,8 +78,6 @@ public class LEDController extends SubsystemBase {
         if (currentState == null)
             return;
 
-        LEDPattern toUpdateLEDPattern;
-
         if (currentState.togglePattern.isPresent()) {
             double elapsedTime = Timer.getFPGATimestamp() - lastPatternChangeInSeconds;
             Double[] patternDurations = currentState.togglePattern.get();
@@ -123,7 +121,7 @@ public class LEDController extends SubsystemBase {
             {
                 try
                 {
-                    Thread.sleep(100);
+                    Thread.sleep(40);
                 }
                 catch (InterruptedException ex)
                 {

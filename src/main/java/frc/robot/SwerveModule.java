@@ -36,7 +36,7 @@ public class SwerveModule {
 	/**
 	 * Max acceleration in M/s of a module.
 	 */
-	public static final double kMaxAcceleration = 8;
+	public static final double kMaxAcceleration = 5 * 2;
 
 	private SparkMax AzimuthMotor;
 

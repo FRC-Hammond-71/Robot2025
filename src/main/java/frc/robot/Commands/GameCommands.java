@@ -16,9 +16,8 @@ public class GameCommands
     }
     public final Command ScoreNet() 
     { 
-        return CommandUtils.withName("ScoreNet", r.elevator.RaiseToNet()
-            .andThen(r.arm.PivotToNet())
-            .andThen(r.launcher.cmdScoreAlgae().withTimeout(3)));
+        return CommandUtils.withName("ScoreNet", r.elevator.RaiseToNet().alongWith(r.arm.PivotToNet())
+            .andThen(r.launcher.cmdScoreAlgae().withTimeout(1)));
     }
 
     public final Command IntakeHigherAlgae()
@@ -28,16 +27,22 @@ public class GameCommands
             .andThen(Commands.race(
                 r.launcher.cmdIntakeAlgae(), 
                 r.arm.PivotToHigherAlgae().withTimeout(2)
-                    .andThen(r.elevator.makeRaiseToCommand(r.elevator.getHeight() + 2))
+                    .andThen(r.elevator.makeRaiseToCommand(r.elevator.getHeight() + 1))
                     .andThen(r.arm.PivotTo180())
             )));
     }
 
+    public final Command AutoIntakeLowerAlgae() 
+    {
+        return CommandUtils.withName("IntakeLowerAlgae", Commands
+            .parallel(r.elevator.RaiseToLowerAlgae(), r.arm.PivotToStowed())
+            .andThen(Commands.deadline(r.launcher.cmdIntakeAlgae().withTimeout(2), r.arm.PivotToLowerAlgae())));
+    }
     public final Command IntakeLowerAlgae() 
     {
         return CommandUtils.withName("IntakeLowerAlgae", Commands
             .parallel(r.elevator.RaiseToLowerAlgae(), r.arm.PivotToStowed())
-            .andThen(Commands.deadline(r.launcher.cmdIntakeAlgae().withTimeout(3), r.arm.PivotToLowerAlgae())));
+            .andThen(Commands.deadline(r.launcher.cmdIntakeAlgae(), r.arm.PivotToLowerAlgae())));
     }
 
     public final Command IntakeAlgae()
@@ -62,14 +67,14 @@ public class GameCommands
     {
         return CommandUtils.withName("ScoreCoralL3", 
             r.arm.PivotTo180()
-            .andThen(r.launcher.cmdScoreCoral().withTimeout(1)));
+            .andThen(r.launcher.cmdScoreCoral().withTimeout(0.3)));
     }
 
     public final Command ScoreCoraL4() 
     {
         return CommandUtils.withName("ScoreCoralL4", 
             Commands.parallel(r.elevator.RaiseToL4(), r.arm.PivotTo180())
-            .andThen(r.launcher.cmdScoreCoral().withTimeout(1)));
+            .andThen(r.launcher.cmdScoreCoral().withTimeout(0.3)));
     }
 
     public final Command RaiseToMax()

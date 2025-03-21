@@ -6,13 +6,13 @@
     "GLOBAL": {
       "font": "Proggy Dotted",
       "fps": "30",
-      "height": "1063",
-      "maximized": "0",
+      "height": "979",
+      "maximized": "1",
       "style": "1",
       "userScale": "4",
-      "width": "1278",
-      "xpos": "1",
-      "ypos": "31"
+      "width": "1680",
+      "xpos": "0",
+      "ypos": "23"
     }
   },
   "Window": {
@@ -39,7 +39,7 @@
     "###Addressable LEDs": {
       "Collapsed": "0",
       "Pos": "47,88",
-      "Size": "229,690"
+      "Size": "232,948"
     },
     "###FMS": {
       "Collapsed": "0",

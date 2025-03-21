@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.567296583106428,
-        "y": 1.862998568838973
+        "x": 2.638267036648964,
+        "y": 2.2167315154180294
       },
       "isLocked": false,
       "linkedName": "CSR"
     },
     {
       "anchor": {
-        "x": 3.497,
-        "y": 2.773
+        "x": 3.508,
+        "y": 2.767
       },
       "prevControl": {
-        "x": 3.212445857528991,
-        "y": 2.186825362155055
+        "x": 3.294602358617345,
+        "y": 2.4349719552513585
       },
       "nextControl": null,
       "isLocked": false,
@@ -30,18 +30,22 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.2809224318658282,
-      "rotationDegrees": 38.18669124253862
+      "waypointRelativePos": 0.040880503144654086,
+      "rotationDegrees": -125.00000000000001
+    },
+    {
+      "waypointRelativePos": 0.4795597484276729,
+      "rotationDegrees": 59.99999999999999
     }
   ],
   "constraintZones": [
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.7923399162178346,
+      "minWaypointRelativePos": 0.5888689407540398,
       "maxWaypointRelativePos": 1.0,
       "constraints": {
         "maxVelocity": 0.5,
-        "maxAcceleration": 1.5,
+        "maxAcceleration": 1.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,
         "nominalVoltage": 12.0,
@@ -50,12 +54,35 @@
     }
   ],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "IntakeCoral",
+      "waypointRelativePos": 0.125673249551167,
+      "endWaypointRelativePos": 0.21065230400957516,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "IntakeCoral"
+        }
+      }
+    },
+    {
+      "name": "IntakeCoral",
+      "waypointRelativePos": 0.38898862956313596,
+      "endWaypointRelativePos": 0.5038898862956321,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "IntakeCoral"
+        }
+      }
+    }
+  ],
   "globalConstraints": {
-    "maxVelocity": 1.0,
-    "maxAcceleration": 0.5,
-    "maxAngularVelocity": 360.0,
-    "maxAngularAcceleration": 120.0,
+    "maxVelocity": 2.75,
+    "maxAcceleration": 2.0,
+    "maxAngularVelocity": 450.0,
+    "maxAngularAcceleration": 200.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },

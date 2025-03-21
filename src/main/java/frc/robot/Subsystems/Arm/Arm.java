@@ -35,7 +35,7 @@ public class Arm extends SubsystemBase {
     public static final Rotation2d kMinRotation = Rotation2d.fromDegrees(0);
 
     private Rotation2d targetRotation;
-    private ProfiledPIDController PID = new ProfiledPIDController(2.5, 0, 0.00002, new Constraints(Math.PI * 2.5, Math.PI));
+    private ProfiledPIDController PID = new ProfiledPIDController(3.3, 0, 0, new Constraints(Math.PI * 2, Math.PI));
     private ArmFeedforward feedforward;
     private SparkMax rotationMotor;
     private AbsoluteEncoder absoluteEncoder;
@@ -56,14 +56,14 @@ public class Arm extends SubsystemBase {
 
     public Arm(int rotationMotorDeviceID) {
             
-        this.PID.setTolerance(Math.toRadians(1));
+        this.PID.setTolerance(Math.toRadians(2.5));
 
         this.rotationMotor = new SparkMax(rotationMotorDeviceID, MotorType.kBrushless);
         this.absoluteEncoder = rotationMotor.getAbsoluteEncoder();
 
         this.targetRotation = new Rotation2d();
 
-        this.feedforward = new ArmFeedforward(0.05, 1.7, 1.4, 0);
+        this.feedforward = new ArmFeedforward(0.05, 1.3, 2, 0);
 
         this.rotationMotor.configure(new SparkMaxConfig().idleMode(IdleMode.kBrake), ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
 
@@ -149,6 +149,8 @@ public class Arm extends SubsystemBase {
         SmartDashboard.putNumber("Arm/MeasuredSpeed", this.absoluteEncoder.getVelocity() * 360);
 
         final double voltage = feedforward.calculate(getRotation().getRadians()-Math.PI/2, PIDEffort);
+
+        SmartDashboard.putNumber("Arm/Voltage", voltage);
 
         // TODO: Inverse arm rotation motor!
         this.rotationMotor.setVoltage(-voltage);

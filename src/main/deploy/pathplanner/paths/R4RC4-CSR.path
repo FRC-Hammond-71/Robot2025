@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.309,
+        "x": 5.32,
         "y": 2.684
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.257190612863026,
-        "y": 2.154884059674373
+        "x": 4.744350344504621,
+        "y": 2.0829849041057695
       },
       "isLocked": false,
       "linkedName": "R4RC4"
@@ -28,20 +28,29 @@
       "linkedName": "CSR"
     }
   ],
-  "rotationTargets": [
+  "rotationTargets": [],
+  "constraintZones": [
     {
-      "waypointRelativePos": 0.38518518518518524,
-      "rotationDegrees": -153.62787838686268
+      "name": "Constraints Zone",
+      "minWaypointRelativePos": 1.0,
+      "maxWaypointRelativePos": 0.8019150209455418,
+      "constraints": {
+        "maxVelocity": 0.5,
+        "maxAcceleration": 1.5,
+        "maxAngularVelocity": 360.0,
+        "maxAngularAcceleration": 180.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
+      }
     }
   ],
-  "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 1.0,
-    "maxAcceleration": 0.5,
-    "maxAngularVelocity": 360.0,
-    "maxAngularAcceleration": 120.0,
+    "maxVelocity": 2.75,
+    "maxAcceleration": 2.0,
+    "maxAngularVelocity": 450.0,
+    "maxAngularAcceleration": 200.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },

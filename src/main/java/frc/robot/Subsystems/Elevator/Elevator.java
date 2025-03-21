@@ -17,7 +17,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 public class Elevator extends SubsystemBase {
 
-    public static final double kMaxHeight = 22.5;
+    public static final double kMaxHeight = 23;
     public static final double kMinHeight = 0;
 
     private static final double kGearing = 20;
@@ -31,8 +31,8 @@ public class Elevator extends SubsystemBase {
     private final SparkMax elevatorMotor;
     private final Encoder elevatorEncoder;
 
-    private final ProfiledPIDController PID = new ProfiledPIDController(0.22, 0, 0.0005, new Constraints(45, 45));
-    private final ElevatorFeedforward feedforward = new ElevatorFeedforward(0.01, 0.05, 1.5, 0);
+    private final ProfiledPIDController PID = new ProfiledPIDController(0.20, 0, 0, new Constraints(45, 45));
+    private final ElevatorFeedforward feedforward = new ElevatorFeedforward(0.01, 0.15, 1.5, 0);
 
     /**
      * Desired elevator height in inches!
@@ -42,7 +42,7 @@ public class Elevator extends SubsystemBase {
     public static final double kL1Height = 5;
     public static final double kL2Height = 3;
     public static final double kL3Height = 17;
-    public static final double kL4Height = 22.5;
+    public static final double kL4Height = 23;
     public static final double kStowHeight = 0;
     public static final double kLowerAlgaeHeight = 11;
     public static final double kNetHeight = 22;
@@ -59,7 +59,7 @@ public class Elevator extends SubsystemBase {
 
     public void Stow()
     {
-        this.setPositions(ElevatorPosition.Stowed);
+        this.setPositions(kStowHeight);
     }
 
     public Elevator(int driveMotorDeviceId, int encoderDevicePortA, int encoderDevicePortB) {
@@ -68,7 +68,7 @@ public class Elevator extends SubsystemBase {
         this.elevatorEncoder = new Encoder(0, 1, true);
         // this.elevatorEncoder.setDistancePerPulse(0.00048828125);
 
-        this.PID.setTolerance(0.5);
+        this.PID.setTolerance(1);
 
         SparkConfigurations.ApplyConfigPersistNoReset(elevatorMotor, SparkConfigurations.CoastMode);
 
@@ -92,10 +92,6 @@ public class Elevator extends SubsystemBase {
     {
         this.targetPosition = heightInInches;
         this.PID.setGoal(heightInInches);
-    }
-    public void setPositions(ElevatorPosition pos) 
-    {
-        this.setPositions(pos.getHeight());
     }
 
     public void stop()
@@ -132,6 +128,11 @@ public class Elevator extends SubsystemBase {
             return;
         }
 
-        this.elevatorMotor.setVoltage(feedforward.calculate(PIDEffort) * kGearing);
+        double voltage = feedforward.calculate(PIDEffort) * kGearing;
+
+        this.elevatorMotor.setVoltage(voltage);
+
+        SmartDashboard.putNumber("Elevator/Voltage", voltage);
+
     }
 }

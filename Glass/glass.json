@@ -1,18 +1,27 @@
 {
   "NetworkTables": {
+    "Retained Values": {
+      "open": false
+    },
     "retained": {
       "SmartDashboard": {
         "Starting Positions": {
           "open": false
-        },
-        "open": false
+        }
       }
     },
     "transitory": {
       "SmartDashboard": {
         "DriveSubsystem": {
           "open": false
-        }
+        },
+        "DriverAssistance": {
+          "open": true
+        },
+        "DriverAssisted": {
+          "open": true
+        },
+        "open": true
       }
     },
     "types": {
@@ -70,9 +79,6 @@
     "dsClient": false,
     "mode": "Client (NT4)",
     "serverTeam": "71",
-    "visible": false
-  },
-  "NetworkTables View": {
     "visible": false
   },
   "Plots": {
