@@ -11,7 +11,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "BR-R4RC4"
+                  "pathName": "BM-R3RC4"
                 }
               },
               {
@@ -42,59 +42,15 @@
           }
         },
         {
-          "type": "deadline",
-          "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "R4RC4-CSR"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "PivotToStowed"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "RaiseElevatorCSIntake"
-                }
-              }
-            ]
-          }
-        },
-        {
           "type": "named",
           "data": {
-            "name": "StopSwerve"
-          }
-        },
-        {
-          "type": "race",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "IntakeFromCS"
-                }
-              },
-              {
-                "type": "wait",
-                "data": {
-                  "waitTime": 1.0
-                }
-              }
-            ]
+            "name": "StowAll"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "CSR-R5LC4"
+            "pathName": "R3RC4-R3AL"
           }
         },
         {
@@ -106,13 +62,25 @@
         {
           "type": "named",
           "data": {
-            "name": "ScoreCoralL4"
+            "name": "IntakeLowerAlgae"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "R3AL-Leave"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "StowAll"
+            "name": "StopSwerve"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "RaiseElevatorL4"
           }
         }
       ]

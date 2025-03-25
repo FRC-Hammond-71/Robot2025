@@ -20,6 +20,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.LEDPattern;
@@ -70,8 +72,8 @@ public class Robot extends TimedRobot
 	private SendableChooser<Command> autoChooser;
 	private SendableChooser<Pose2d> initialPoseChooser = new SendableChooser<>();
 
-	private final LinearFilter xFilter = LinearFilter.singlePoleIIR(0.8, Robot.kDefaultPeriod);
-	private final LinearFilter yFilter = LinearFilter.singlePoleIIR(0.8, Robot.kDefaultPeriod);
+	private final LinearFilter xFilter = LinearFilter.singlePoleIIR(0.2, Robot.kDefaultPeriod);
+	private final LinearFilter yFilter = LinearFilter.singlePoleIIR(0.2, Robot.kDefaultPeriod);
 	public ChassisSpeeds speeds;
 
 	public GameCommands gameCommands;
@@ -84,6 +86,10 @@ public class Robot extends TimedRobot
 	private Command semiAutomatedCommand = null;
 	private DriverAssistance driverAssistance;
 	//private GameCommands gameCommands;
+
+	private double invertedControls = 1;
+
+	DoublePublisher timePublisher = NetworkTableInstance.getDefault().getDoubleTopic("Match Time").publish();
 
 	@Override
 	public void robotInit() 
@@ -138,6 +144,7 @@ public class Robot extends TimedRobot
 		NamedCommands.registerCommand("PivotTo180", this.arm.PivotTo180());
 		NamedCommands.registerCommand("ScoreAlgae", this.launcher.cmdScoreAlgae());
 		NamedCommands.registerCommand("IntakeAlgae", this.launcher.cmdAutoIntakeAlgae());
+		NamedCommands.registerCommand("IntakeAlgaeManual", this.launcher.cmdIntakeAlgae());
 		NamedCommands.registerCommand("IntakeCoral", this.launcher.cmdIntakeCoral());
 		NamedCommands.registerCommand("ScoreCoral", this.launcher.cmdScoreCoral());
 		NamedCommands.registerCommand("TurnToNet", this.arm.PivotToNet());
@@ -149,9 +156,12 @@ public class Robot extends TimedRobot
 		NamedCommands.registerCommand("StowAll", this.gameCommands.StowAll());
 		NamedCommands.registerCommand("StopSwerve", Commands.runOnce(() -> this.swerve.Stop()));
 
+		
+
 		this.autoChooser = AutoBuilder.buildAutoChooser();
 
 		SmartDashboard.putData("Auto Chooser", this.autoChooser);
+		SmartDashboard.putData("Command Scheduler", CommandScheduler.getInstance());
 		//#endregion
 
 		this.Mechanism = new Mechanism2d(2, 2);
@@ -166,6 +176,8 @@ public class Robot extends TimedRobot
 		SmartDashboard.putData("Mech2D", this.Mechanism);
 
 		this.driverAssistance = new DriverAssistance(this);
+
+		
 	}
 
 	@Override
@@ -175,18 +187,30 @@ public class Robot extends TimedRobot
 		this.ElevatorLigament.setLength(0.762 + this.elevator.getHeight() / 39.37);
 		this.ArmLigament.setAngle(Rotation2d.fromDegrees(90-82+180).minus(this.arm.getRotation()));
 
+		
+
+		if (driverController.getRawButtonPressed(7))
+		{
+			// invertedControls = invertedControls == 1 ? -1 : 1;
+			CommandScheduler.getInstance().cancelAll();
+			this.semiAutomatedCommand = null;
+		}
 		if (driverController.getStartButtonPressed()) 
 		{
 			// Used to counteract gyro-drift. MUST ALWAYS BE FACING TOWARDS RED ALLIANCE!
-			this.swerve.resetGyro(Rotation2d.fromDegrees(0));
+			// this.swerve.resetGyro(Rotation2d.fromDegrees(0));
+			// this.swerve.resetGyro(Rotation2d.fromDegrees(0));
 
-			// CommandScheduler.getInstance().cancel(this.semiAutomatedCommand);
-			// if (this.swerve.resetPoseWithLimelight())
-			// {
-			// 	ControllerCommands.Rumble(driverController, 0.2).schedule();
-			// }
+			if (this.swerve.resetPoseWithLimelight())
+			{
+				ControllerCommands.Rumble(driverController, 0.2).schedule();
+			}
 		}
+		
 		CommandScheduler.getInstance().run();
+		
+		timePublisher.set(DriverStation.getMatchTime());
+		
 	}
 
 	@Override
@@ -195,6 +219,7 @@ public class Robot extends TimedRobot
 		// This ensures the robot does not continue to move again after re-enabling!
 		// Clears the drive rate limiter and etc.
 		CommandScheduler.getInstance().cancelAll();
+		this.semiAutomatedCommand = null;
 		this.swerve.Stop();
 		this.elevator.stop();
 		this.arm.stop();
@@ -214,6 +239,7 @@ public class Robot extends TimedRobot
 	@Override
 	public void autonomousExit() {
 		CommandScheduler.getInstance().cancelAll();
+		this.semiAutomatedCommand = null;
 	}
 
 	@Override
@@ -241,7 +267,6 @@ public class Robot extends TimedRobot
 
 			if(this.operatorController.getAButton()|| this.driverController.getAButton())
 			{
-	
 				this.launcher.scoreAlgae();
 				this.launcher.scoreCoral();
 			}
@@ -254,6 +279,16 @@ public class Robot extends TimedRobot
 			if(this.operatorController.getBButtonPressed())
 			{
 				this.gameCommands.RaiseToMax().schedule();
+			}
+			if(this.operatorController.getLeftBumperButtonPressed())
+			{
+				this.arm.turnToLolipop();
+			}
+			if(this.operatorController.getRightBumperButtonPressed())
+			{
+				this.gameCommands.IntakeFromCS()
+					.onlyWhile(this.operatorController::getRightBumperButton)
+					.schedule();
 			}
 
 			//D-PAD controls.
@@ -287,19 +322,19 @@ public class Robot extends TimedRobot
 	
 		if (driverController.getRightBumperButton()) 
 		{
-			translationSpeed = 4.3;
+			translationSpeed = 4.5;
 		}
 
-		var xSpeed = (onRedAlliance()) 
+		var xSpeed = invertedControls * ((onRedAlliance()) 
 			? -xFilter.calculate(curveJoystick(-driverController.getLeftY())) * translationSpeed 
-			: xFilter.calculate(curveJoystick(-driverController.getLeftY())) * translationSpeed;
+			: xFilter.calculate(curveJoystick(-driverController.getLeftY())) * translationSpeed);
 
 		// Get the y speed or sideways/strafe speed. We are inverting this because
 		// we want a positive value when we pull to the left. Xbox controllers
 		// return positive values when you pull to the right by default.
-		final var ySpeed = (onRedAlliance()) 
+		final var ySpeed = invertedControls * ((onRedAlliance()) 
 			? -yFilter.calculate(curveJoystick(-driverController.getLeftX())) * translationSpeed
-			: yFilter.calculate(curveJoystick(-driverController.getLeftX())) * translationSpeed;
+			: yFilter.calculate(curveJoystick(-driverController.getLeftX())) * translationSpeed);
 
 		double rot = Math.pow(MathUtil.applyDeadband(-driverController.getRightX(), 0.05), 3) * Math.PI;
 

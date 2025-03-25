@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 1.0840460526315787,
-        "y": 1.0166118421052637
+        "x": 0.9359999999999999,
+        "y": 0.9147499999999991
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.5797846889952147,
-        "y": 2.00664836807929
+        "x": 2.4317386363636357,
+        "y": 1.9047865259740253
       },
       "isLocked": false,
       "linkedName": "CSR"
@@ -33,7 +33,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.75,
+    "maxVelocity": 2.8,
     "maxAcceleration": 2.0,
     "maxAngularVelocity": 450.0,
     "maxAngularAcceleration": 200.0,

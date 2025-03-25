@@ -38,7 +38,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.75,
+    "maxVelocity": 2.8,
     "maxAcceleration": 2.0,
     "maxAngularVelocity": 450.0,
     "maxAngularAcceleration": 200.0,
@@ -53,7 +53,7 @@
   "folder": "Base-R",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 179.4299992551286
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }

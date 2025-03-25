@@ -43,6 +43,8 @@ public class Arm extends SubsystemBase {
     public static final Rotation2d kNetAngle = Rotation2d.fromDegrees(125);
     public static final Rotation2d k180Angle = Rotation2d.fromDegrees(175);
     public static final Rotation2d kL4Angle = Rotation2d.fromDegrees(175);
+
+    
     public static final Rotation2d kLowerAlgaeAngle = Rotation2d.fromDegrees(20);
     public static final Rotation2d kHigherAlgaeAngle = Rotation2d.fromDegrees(210);
     public static final Rotation2d kStowedAngle = Rotation2d.fromDegrees(0);
@@ -96,6 +98,10 @@ public class Arm extends SubsystemBase {
 
     public void turnToStowed() {
         setTargetRotation(Rotation2d.fromDegrees(0));
+    }
+
+    public void turnToLolipop() {
+        setTargetRotation(Rotation2d.fromDegrees(10));
     }
 
     public void turnTo20() {

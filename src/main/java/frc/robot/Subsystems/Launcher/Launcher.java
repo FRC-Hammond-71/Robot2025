@@ -26,7 +26,7 @@ public class Launcher extends SubsystemBase
         this.coralMotor = new SparkMax(coralMotorDeviceID, MotorType.kBrushless);
 
         this.algaeMotor = new SparkMax(algaeMotorDeviceID, MotorType.kBrushless);
-        this.algaeMotor.configure(new SparkMaxConfig().idleMode(IdleMode.kBrake), ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
+        this.algaeMotor.configure(new SparkMaxConfig().idleMode(IdleMode.kBrake).smartCurrentLimit(65), ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
     }
 
     public Command cmdScoreAlgae() { return CommandUtils.withName("ScoreAlgae", Commands.runEnd(() -> this.scoreAlgae(), () -> this.stopAlgae(), this).withTimeout(1)); } 

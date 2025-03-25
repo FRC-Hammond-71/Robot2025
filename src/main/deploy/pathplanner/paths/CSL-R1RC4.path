@@ -3,51 +3,51 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.9359999999999999,
-        "y": 0.9147499999999991
+        "x": 1.0335000000000003,
+        "y": 7.1255
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.490220984017385,
-        "y": 2.1148696733127648
+        "x": 2.6996220171440415,
+        "y": 5.899342951921448
       },
       "isLocked": false,
-      "linkedName": "CSR"
+      "linkedName": "CSL"
     },
     {
       "anchor": {
-        "x": 3.512,
-        "y": 2.786
+        "x": 3.62,
+        "y": 5.358
       },
       "prevControl": {
-        "x": 3.298602358617345,
-        "y": 2.4539719552513586
+        "x": 3.2066908426844978,
+        "y": 5.724355195014575
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "R5LC4"
+      "linkedName": "R1RC4"
     }
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.040880503144654086,
-      "rotationDegrees": -125.00000000000001
+      "waypointRelativePos": 0.01886792452830189,
+      "rotationDegrees": 126.0
     },
     {
-      "waypointRelativePos": 0.4795597484276729,
-      "rotationDegrees": 59.99999999999999
+      "waypointRelativePos": 0.34591194968553457,
+      "rotationDegrees": -44.1949395393365
     }
   ],
   "constraintZones": [
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.5888689407540398,
+      "minWaypointRelativePos": 0.7160804020100503,
       "maxWaypointRelativePos": 1.0,
       "constraints": {
         "maxVelocity": 0.5,
-        "maxAcceleration": 1.0,
-        "maxAngularVelocity": 540.0,
-        "maxAngularAcceleration": 720.0,
+        "maxAcceleration": 2.0,
+        "maxAngularVelocity": 450.0,
+        "maxAngularAcceleration": 200.0,
         "nominalVoltage": 12.0,
         "unlimited": false
       }
@@ -57,8 +57,8 @@
   "eventMarkers": [
     {
       "name": "IntakeCoral",
-      "waypointRelativePos": 0.125673249551167,
-      "endWaypointRelativePos": 0.21065230400957516,
+      "waypointRelativePos": 0.0728643216080402,
+      "endWaypointRelativePos": 0.1281407035175879,
       "command": {
         "type": "named",
         "data": {
@@ -68,8 +68,8 @@
     },
     {
       "name": "IntakeCoral",
-      "waypointRelativePos": 0.2412060301507536,
-      "endWaypointRelativePos": 0.3492462311557787,
+      "waypointRelativePos": 0.1733668341708542,
+      "endWaypointRelativePos": 0.24120603015075365,
       "command": {
         "type": "named",
         "data": {
@@ -79,14 +79,9 @@
     },
     {
       "name": "IntakeCoral",
-      "waypointRelativePos": 0.41457286432160806,
-      "endWaypointRelativePos": 0.5125628140703518,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "IntakeCoral"
-        }
-      }
+      "waypointRelativePos": 0.28140703517587917,
+      "endWaypointRelativePos": 0.3542713567839195,
+      "command": null
     }
   ],
   "globalConstraints": {
@@ -99,13 +94,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 59.99999999999999
+    "rotation": -59.99999999999999
   },
   "reversed": false,
-  "folder": "CS-R",
+  "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -125.00000000000001
+    "rotation": 126.0
   },
   "useDefaultConstraints": true
 }

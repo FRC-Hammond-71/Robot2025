@@ -30,12 +30,19 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.networktables.GenericPublisher;
+import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.Publisher;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.networktables.Topic;
 import edu.wpi.first.units.Units;
+import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 // import edu.wpi.first.math.trajectory.TrapezoidProfile;
 // import edu.wpi.first.math.trajectory.ExponentialProfile.Constraints;
@@ -69,6 +76,7 @@ public class Drivetrain extends SubsystemBase {
 	private final SwerveModule m_backLeft = new SwerveModule(12, 13, 22, 2.3504);
 	private final SwerveModule m_backRight = new SwerveModule(10, 11, 23, 2.28488);
 	private boolean isChangingRotationLast = true;
+	
 
 	// Lower when we add simple feed forward!!!!!!
 	private final PIDController m_headingPID = new PIDController(1.7, 0, 0.005);
@@ -381,6 +389,28 @@ public class Drivetrain extends SubsystemBase {
 		SmartDashboard.putNumber(String.format("Drivetrain/%s Measured-Speed", name),module.getMeasuredState().speedMetersPerSecond);
 	}
 
+	public void dashboardPrintSwerveDrive() {
+		SmartDashboard.putData("Swerve Drivetrain", new Sendable() {
+			public void initSendable(SendableBuilder builder) {
+				builder.setSmartDashboardType("SwerveDrive");
+				
+				builder.addDoubleProperty("Front Left Heading", () -> m_frontLeft.getAzimuthRotation().getDegrees(), null);
+				builder.addDoubleProperty("Front Left Velocity", () -> m_frontLeft.getDriveVelocity(), null);
+
+				builder.addDoubleProperty("Front Right Heading", () -> m_frontRight.getAzimuthRotation().getDegrees(), null);
+				builder.addDoubleProperty("Front Right Velocity", () -> m_frontRight.getDriveVelocity(), null);
+
+				builder.addDoubleProperty("Back Left Heading", () -> m_backLeft.getAzimuthRotation().getDegrees(), null);
+				builder.addDoubleProperty("Back Left Velocity", () -> m_backLeft.getDriveVelocity(), null);
+
+				builder.addDoubleProperty("Back Right Heading", () -> m_backRight.getAzimuthRotation().getDegrees(), null);
+				builder.addDoubleProperty("Back Right Velocity", () ->  m_backRight.getDriveVelocity(), null);
+
+				builder.addDoubleProperty("Robot Heading", () -> getGyroHeading().getDegrees(), null);				
+			}
+		});
+	}	
+
 	public void dashboardPrint() {
 		SmartDashboard.putNumber("Drivetrain/Heading", this.getPose().getRotation().getDegrees());
 		SmartDashboard.putNumber("Drivetrain/GyroHeading", this.getGyroHeading().getDegrees());
@@ -389,5 +419,6 @@ public class Drivetrain extends SubsystemBase {
 		dashboardPrintModuleSpeeds("FR", m_frontRight);
 		dashboardPrintModuleSpeeds("BL", m_backLeft);
 		dashboardPrintModuleSpeeds("BR", m_backRight);
+		
 	}
 }

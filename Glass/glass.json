@@ -44,17 +44,7 @@
       "/SmartDashboard/PathPlanner": "Alerts"
     },
     "windows": {
-      "/SmartDashboard/Arm/PID": {
-        "window": {
-          "visible": true
-        }
-      },
       "/SmartDashboard/Auto Chooser": {
-        "window": {
-          "visible": true
-        }
-      },
-      "/SmartDashboard/Elevator/PID": {
         "window": {
           "visible": true
         }
@@ -76,11 +66,6 @@
           "visible": true
         }
       },
-      "/SmartDashboard/LED Preview": {
-        "window": {
-          "visible": true
-        }
-      },
       "/SmartDashboard/Mech2D": {
         "window": {
           "visible": true
@@ -89,10 +74,8 @@
     }
   },
   "NetworkTables Settings": {
-    "dsClient": false,
     "mode": "Client (NT4)",
-    "serverTeam": "71",
-    "visible": false
+    "serverTeam": "71"
   },
   "NetworkTables View": {
     "visible": false

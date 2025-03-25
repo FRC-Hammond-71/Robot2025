@@ -26,7 +26,7 @@ public class FieldConstants
     public static Pose2d BMiddleBlue = new Pose2d(7.248, 4, Rotation2d.fromDegrees(180));
     public static Pose2d BMiddleRed = FlippingUtil.flipFieldPose(BMiddleBlue);
 
-    public static Pose2d BLeftBlue = new Pose2d(7.248, 6.00, Rotation2d.fromDegrees(180));
+    public static Pose2d BLeftBlue = new Pose2d(7.248, 6.175, Rotation2d.fromDegrees(180));
     public static Pose2d BLeftRed = FlippingUtil.flipFieldPose(BLeftBlue);
     
     public static final LineSegment AlgaeNetLine() 

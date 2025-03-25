@@ -165,11 +165,11 @@ public class DriverAssistance
         return new DriverAssistOutput(
             this.netAttractor.calculate(rPose),
             this.r.gameCommands.ScoreNet()
-                .onlyWhile(onlyWhilePredicate)
-                .finallyDo(() -> {
-                    this.r.arm.turnToStowed();
-                    this.r.elevator.setPositions(0);
-                }));
+            .onlyWhile(onlyWhilePredicate)
+            .finallyDo(() -> {
+                this.r.arm.turnToStowed();
+                this.r.elevator.setPositions(0);
+            }));
     }
 
     private DriverAssistOutput assistProcessor(Pose2d rPose, BooleanSupplier onlyWhilePredicate)
@@ -248,9 +248,9 @@ public class DriverAssistance
 
         switch (config.reefCoralLevel) {
             case 3:
-                return this.r.gameCommands.ScoreCoralL3();
+                return this.r.gameCommands.AlignCoralL3();
             case 4:
-                return this.r.gameCommands.ScoreCoraL4();
+                return this.r.gameCommands.AlignCoralL4();
             default:
                 return null;
         }

@@ -5,19 +5,25 @@
     "data": {
       "commands": [
         {
-          "type": "sequential",
+          "type": "deadline",
           "data": {
             "commands": [
               {
                 "type": "path",
                 "data": {
-                  "pathName": "BM-R3LC4"
+                  "pathName": "BR-R4LC4"
                 }
               },
               {
                 "type": "named",
                 "data": {
                   "name": "RaiseElevatorL4"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "PivotTo180"
                 }
               }
             ]
@@ -36,38 +42,25 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "StowAll"
-          }
-        },
-        {
-          "type": "parallel",
+          "type": "deadline",
           "data": {
             "commands": [
               {
-                "type": "sequential",
+                "type": "path",
                 "data": {
-                  "commands": [
-                    {
-                      "type": "path",
-                      "data": {
-                        "pathName": "R3LC4-R3AL"
-                      }
-                    },
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "StopSwerve"
-                      }
-                    }
-                  ]
+                  "pathName": "R4LC4-CSR"
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "RaiseElevatorLowerAlgae"
+                  "name": "PivotToStowed"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "RaiseElevatorCSIntake"
                 }
               }
             ]
@@ -76,13 +69,32 @@
         {
           "type": "named",
           "data": {
-            "name": "IntakeLowerAlgae"
+            "name": "StopSwerve"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "IntakeFromCS"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 2.0
+                }
+              }
+            ]
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "R3AL-Net"
+            "pathName": "CSR-R5LC4"
           }
         },
         {
@@ -94,7 +106,7 @@
         {
           "type": "named",
           "data": {
-            "name": "ScoreNet"
+            "name": "ScoreCoralL4"
           }
         },
         {

@@ -47,6 +47,7 @@ public class Elevator extends SubsystemBase {
     public static final double kLowerAlgaeHeight = 11;
     public static final double kNetHeight = 22;
     public static final double kCSIntakeHeight = 20;
+    public static final double lolipop = 2.5;
 
     public Command RaiseToL1() { return CommandUtils.withName("RaiseToL1", makeRaiseToCommand(kL1Height)); }
     public Command RaiseToL2() { return CommandUtils.withName("RaiseToL2", makeRaiseToCommand(kL2Height)); }
@@ -62,12 +63,17 @@ public class Elevator extends SubsystemBase {
         this.setPositions(kStowHeight);
     }
 
+    public void lolipop()
+    {
+        this.setPositions(lolipop);
+    }
+
     public Elevator(int driveMotorDeviceId, int encoderDevicePortA, int encoderDevicePortB) {
 
         this.elevatorMotor = new SparkMax(driveMotorDeviceId, MotorType.kBrushless);
         this.elevatorEncoder = new Encoder(0, 1, true);
         // this.elevatorEncoder.setDistancePerPulse(0.00048828125);
-
+        
         this.PID.setTolerance(1);
 
         SparkConfigurations.ApplyConfigPersistNoReset(elevatorMotor, SparkConfigurations.CoastMode);
@@ -110,7 +116,7 @@ public class Elevator extends SubsystemBase {
 
         if (DriverStation.isDisabled()) return;
 
-        SmartDashboard.putNumber("Elevator/Amps", this.elevatorMotor.getOutputCurrent());
+     //   SmartDashboard.putNumber("Elevator/Amps", this.elevatorMotor.getOutputCurrent());
 
         double PIDEffort = this.PID.calculate(this.getHeight(), this.targetPosition);
 
@@ -132,7 +138,7 @@ public class Elevator extends SubsystemBase {
 
         this.elevatorMotor.setVoltage(voltage);
 
-        SmartDashboard.putNumber("Elevator/Voltage", voltage);
+   //     SmartDashboard.putNumber("Elevator/Voltage", voltage);
 
     }
 }

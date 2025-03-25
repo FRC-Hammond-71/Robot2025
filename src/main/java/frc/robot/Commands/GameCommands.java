@@ -17,7 +17,7 @@ public class GameCommands
     public final Command ScoreNet() 
     { 
         return CommandUtils.withName("ScoreNet", r.elevator.RaiseToNet().alongWith(r.arm.PivotToNet())
-            .andThen(r.launcher.cmdScoreAlgae().withTimeout(1)));
+            .andThen(r.launcher.cmdScoreAlgae().withTimeout(0.5)));
     }
 
     public final Command IntakeHigherAlgae()
@@ -36,7 +36,7 @@ public class GameCommands
     {
         return CommandUtils.withName("IntakeLowerAlgae", Commands
             .parallel(r.elevator.RaiseToLowerAlgae(), r.arm.PivotToStowed())
-            .andThen(Commands.deadline(r.launcher.cmdIntakeAlgae().withTimeout(2), r.arm.PivotToLowerAlgae())));
+            .andThen(Commands.deadline(r.launcher.cmdIntakeAlgae().withTimeout(3), r.arm.PivotToLowerAlgae())));
     }
     public final Command IntakeLowerAlgae() 
     {
@@ -75,6 +75,16 @@ public class GameCommands
         return CommandUtils.withName("ScoreCoralL4", 
             Commands.parallel(r.elevator.RaiseToL4(), r.arm.PivotTo180())
             .andThen(r.launcher.cmdScoreCoral().withTimeout(0.3)));
+    }
+
+    public final Command AlignCoralL3() 
+    {
+        return CommandUtils.withName("AlignCoralL3", r.elevator.RaiseToStowed().alongWith(r.arm.PivotTo180()));
+    }
+
+    public final Command AlignCoralL4()
+    {
+        return CommandUtils.withName("AlignCoralL4", r.elevator.RaiseToL4().alongWith(r.arm.PivotTo180()));
     }
 
     public final Command RaiseToMax()

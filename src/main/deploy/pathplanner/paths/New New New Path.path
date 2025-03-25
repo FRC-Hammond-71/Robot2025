@@ -3,42 +3,37 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 6.034,
-        "y": 3.762
+        "x": 2.0,
+        "y": 7.0
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.801829573932148,
-        "y": 3.854719433019578
+        "x": 3.0,
+        "y": 7.0
       },
       "isLocked": false,
-      "linkedName": "R3LC4"
+      "linkedName": null
     },
     {
       "anchor": {
-        "x": 5.75,
-        "y": 3.863
+        "x": 4.0,
+        "y": 6.0
       },
       "prevControl": {
-        "x": 5.980531361934264,
-        "y": 3.7662772458790923
+        "x": 3.0,
+        "y": 6.0
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "R3AL"
+      "linkedName": null
     }
   ],
-  "rotationTargets": [
-    {
-      "waypointRelativePos": 0.7769058295964166,
-      "rotationDegrees": 90.0
-    }
-  ],
+  "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.75,
+    "maxVelocity": 2.8,
     "maxAcceleration": 2.0,
     "maxAngularVelocity": 450.0,
     "maxAngularAcceleration": 200.0,
@@ -47,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": 0.0
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": 0.0
   },
   "useDefaultConstraints": true
 }
