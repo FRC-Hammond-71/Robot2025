@@ -22,6 +22,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.LEDPattern;
@@ -63,7 +64,7 @@ public class Robot extends TimedRobot
 	private final XboxController operatorController = new XboxController(1);
 
 	//#region Subsystems
-	public final Drivetrain swerve = new Drivetrain();
+	public Drivetrain swerve;
 	public final Elevator elevator = new Elevator(40, 8, 9);
 	public final Arm arm = new Arm(50);
 	public final Launcher launcher = new Launcher(52, 51);
@@ -91,6 +92,8 @@ public class Robot extends TimedRobot
 
 	DoublePublisher timePublisher = NetworkTableInstance.getDefault().getDoubleTopic("Match Time").publish();
 
+	private StructPublisher<Pose2d> autoTargetPosePublisher = NetworkTableInstance.getDefault().getStructTopic("targetPose", Pose2d.struct).publish();
+
 	@Override
 	public void robotInit() 
 	{
@@ -112,6 +115,7 @@ public class Robot extends TimedRobot
 		System.out.println("Connected to Driver Station!");
 
 		frc.robot.Limelight.Limelight.registerDevice("limelight");
+		this.swerve = new Drivetrain();
 
 		initialPoseChooser.addOption("Left - Blue", FieldConstants.BLeftBlue);
 		initialPoseChooser.addOption("Left - Red", FieldConstants.BLeftRed);
@@ -156,8 +160,8 @@ public class Robot extends TimedRobot
 		NamedCommands.registerCommand("StowAll", this.gameCommands.StowAll());
 		NamedCommands.registerCommand("StopSwerve", Commands.runOnce(() -> this.swerve.Stop()));
 
-		
 
+		
 		this.autoChooser = AutoBuilder.buildAutoChooser();
 
 		SmartDashboard.putData("Auto Chooser", this.autoChooser);
@@ -324,6 +328,8 @@ public class Robot extends TimedRobot
 		{
 			translationSpeed = 4.5;
 		}
+
+		translationSpeed = -translationSpeed;
 
 		var xSpeed = invertedControls * ((onRedAlliance()) 
 			? -xFilter.calculate(curveJoystick(-driverController.getLeftY())) * translationSpeed 

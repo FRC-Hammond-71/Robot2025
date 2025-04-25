@@ -13,6 +13,7 @@ import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
 import com.studica.frc.AHRS.NavXUpdateRate;
 
+import java.util.List;
 import java.util.Optional;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
@@ -58,6 +59,7 @@ import frc.robot.Attractors.PointAttractor;
 import frc.robot.Attractors.Controllers.FaceController;
 import frc.robot.Limelight.Limelight;
 import frc.robot.Limelight.LimelightHelpers.PoseEstimate;
+import frc.robot.ReefWaypointGenerator.ReefEdgeWaypoints;
 
 /** Represents a swerve drive style drivetrain. */
 public class Drivetrain extends SubsystemBase {
@@ -71,17 +73,17 @@ public class Drivetrain extends SubsystemBase {
 	private final Translation2d m_backLeftLocation = new Translation2d(-0.2635, 0.2635);
 	private final Translation2d m_backRightLocation = new Translation2d(-0.2635, -0.2635);
 
-	private final SwerveModule m_frontLeft = new SwerveModule(14, 15, 20, 2.236);
-	private final SwerveModule m_frontRight = new SwerveModule(16, 17, 21, 2.38472);
-	private final SwerveModule m_backLeft = new SwerveModule(12, 13, 22, 2.3504);
-	private final SwerveModule m_backRight = new SwerveModule(10, 11, 23, 2.28488);
+	public final SwerveModule m_frontLeft = new SwerveModule(14, 15, 20, 2.236);
+	public final SwerveModule m_frontRight = new SwerveModule(16, 17, 21, 2.38472);
+	public final SwerveModule m_backLeft = new SwerveModule(12, 13, 22, 2.3504);
+	public final SwerveModule m_backRight = new SwerveModule(10, 11, 23, 2.28488);
 	private boolean isChangingRotationLast = true;
 	
 
 	// Lower when we add simple feed forward!!!!!!
 	private final PIDController m_headingPID = new PIDController(1.7, 0, 0.005);
 
-	private final Pigeon2 m_gyro = new Pigeon2(30);
+	public final Pigeon2 m_gyro = new Pigeon2(30);
 
 	private StructPublisher<Pose2d> posePublisher = NetworkTableInstance.getDefault()
 			.getStructTopic("rPose", Pose2d.struct).publish();
@@ -105,22 +107,8 @@ public class Drivetrain extends SubsystemBase {
 	public final StructPublisher<ChassisSpeeds> desiredRelativeSpeedsPublisher = NetworkTableInstance.getDefault()
 			.getStructTopic("DesiredRelativeSpeeds", ChassisSpeeds.struct).publish();
 
-	private final SwerveDriveKinematics m_kinematics = new SwerveDriveKinematics(m_frontLeftLocation,
+	public final SwerveDriveKinematics m_kinematics = new SwerveDriveKinematics(m_frontLeftLocation,
 			m_frontRightLocation, m_backLeftLocation, m_backRightLocation);
-
-	private final SwerveDrivePoseEstimator m_odometry = new SwerveDrivePoseEstimator(m_kinematics,
-			m_gyro.getRotation2d(),
-			new SwerveModulePosition[] {
-					m_frontLeft.getPosition(),
-					m_frontRight.getPosition(),
-					m_backLeft.getPosition(),
-					m_backRight.getPosition()
-			}, new Pose2d(0, 0, new Rotation2d(0)),
-
-			// Odometry Stds
-			VecBuilder.fill(0.05, 0.05, Math.toRadians(0)),
-			// Vision Stds
-			VecBuilder.fill(2, 2, Math.toRadians(30)));
 
 	public boolean resetPoseWithLimelight()
 	{
@@ -135,22 +123,36 @@ public class Drivetrain extends SubsystemBase {
 	}
 
 	public void resetPose(Pose2d initialPose) {
-		Limelight.useDevice("limelight").resetPose(initialPose);
 		this.m_gyro.reset();
 		this.m_gyro.setYaw(initialPose.getRotation().getDegrees());
-		this.m_odometry.resetPose(initialPose);
 		this.m_headingPID.reset();
 		this.m_headingPID.setSetpoint(initialPose.getRotation().getRadians());
+		Limelight.useDevice("limelight").resetPose(initialPose);
 		this.posePublisher.set(initialPose);
 		this.m_field.setRobotPose(initialPose);
+		this.odometry.reset(initialPose);
 		this.isChangingRotationLast = true;
 	}
+
+	public Odometry odometry;
 
 	public Drivetrain() {
 		SmartDashboard.putData("Field", m_field);
 
 		this.m_headingPID.enableContinuousInput(-Math.PI, Math.PI);
 		this.m_headingPID.setTolerance(3 * (Math.PI / 180));
+
+		// Update at 250Hz
+		this.m_gyro.getYaw().setUpdateFrequency(250);
+
+		this.odometry = new Odometry(this);
+
+		final List<ReefEdgeWaypoints> waypoints = ReefWaypointGenerator.generateHexagonPoses();
+		for (int e = 0; e < waypoints.size(); e++)
+		{
+			this.m_field.getObject(String.format("Edge %d L4 Left", e)).setPose(waypoints.get(e).LeftL4Coral);
+			this.m_field.getObject(String.format("Edge %d L4 Right", e)).setPose(waypoints.get(e).RightL4Coral);
+		}
 
 		setupPathPlanner();
 	}
@@ -267,7 +269,9 @@ public class Drivetrain extends SubsystemBase {
 	@Override
 	public void periodic() 
 	{
-		this.updateOdometry();
+		// this.updateOdometry();
+		this.odometry.update();
+		this.posePublisher.set(this.odometry.getEstimatedPose());
 		this.dashboardPrint();
 
         if (DriverStation.isDisabled()) return;
@@ -302,6 +306,16 @@ public class Drivetrain extends SubsystemBase {
 		return this.m_kinematics.toChassisSpeeds(this.getMeasuredModulesStates());
 	}
 
+	public SwerveModulePosition[] getModulePositions()
+	{
+		return new SwerveModulePosition[] {
+			m_frontLeft.getPosition(),
+			m_frontRight.getPosition(),
+			m_backLeft.getPosition(),
+			m_backRight.getPosition()
+		};
+	}
+
 	public void resetGyro(Rotation2d rot)
 	{
 		this.resetPose(new Pose2d(this.getPose().getTranslation(), rot));
@@ -323,49 +337,54 @@ public class Drivetrain extends SubsystemBase {
 	/** Updates the field relative position of the robot. */
 	public void updateOdometry() 
 	{
-		this.m_odometry.update(this.getGyroHeading(), new SwerveModulePosition[] {
-			m_frontLeft.getPosition(),
-			m_frontRight.getPosition(),
-			m_backLeft.getPosition(),
-			m_backRight.getPosition()
-		});
+		// this.m_odometry.update(this.getGyroHeading(), new SwerveModulePosition[] {
+		// 	m_frontLeft.getPosition(),
+		// 	m_frontRight.getPosition(),
+		// 	m_backLeft.getPosition(),
+		// 	m_backRight.getPosition()
+		// });
 
-		Pose2d estimatedPose = this.getPose();
-		Rotation2d gyroHeading = this.getGyroHeading();
-		ChassisSpeeds speeds = this.getMeasuredSpeeds();
-		Limelight limelight = Limelight.useDevice("limelight");
+		// Pose2d estimatedPose = this.getPose();
+		// Rotation2d gyroHeading = this.getGyroHeading();
+		// ChassisSpeeds speeds = this.getMeasuredSpeeds();
+		// Limelight limelight = Limelight.useDevice("limelight");
 
-		boolean useVision = SmartDashboard.getBoolean("Drivetrain/useVision", true);
+		// boolean useVision = SmartDashboard.getBoolean("Drivetrain/useVision", true);
 
-		Optional<Pose2d> rawResult = limelight.getRawEstimatedPose();
-		Optional<Pose2d> megaTagResult = limelight.getMegaTag2EstimatedPose(gyroHeading, speeds);
-		Optional<Pose2d> stablePose = limelight.getStableEstimatedPose(estimatedPose, gyroHeading, speeds);
+		// Optional<Pose2d> rawResult = limelight.getRawEstimatedPose();
+		// Optional<Pose2d> megaTagResult = limelight.getMegaTag2EstimatedPose(gyroHeading, speeds);
+		// Optional<Pose2d> stablePose = limelight.getStableEstimatedPose(estimatedPose, gyroHeading, speeds);
 
-		if (rawResult.isPresent())
-		{
-			this.llRawPosePublisher.set(rawResult.get());
-		}
-		if (megaTagResult.isPresent())
-		{
-			this.llMegaTagPosePublisher.set(megaTagResult.get());
-		}
-		if (stablePose.isPresent())
-		{
-			Pose2d newStablePose = new Pose2d(stablePose.get().getTranslation(), estimatedPose.getRotation());
+		// if (rawResult.isPresent())
+		// {
+		// 	this.llRawPosePublisher.set(rawResult.get());
+		// }
+		// if (megaTagResult.isPresent())
+		// {
+		// 	this.llMegaTagPosePublisher.set(megaTagResult.get());
+		// }
+		// if (stablePose.isPresent())
+		// {
+		// 	Pose2d newStablePose = new Pose2d(stablePose.get().getTranslation(), estimatedPose.getRotation());
 
-			// Only contribute the stablePose to Pose Estimation!
-			if (useVision)
-			{
-				this.m_odometry.addVisionMeasurement(newStablePose, Timer.getFPGATimestamp() - limelight.getLatencyInSeconds());
-			}
-			this.llStablePosePublisher.set(newStablePose);
-		}
-		this.posePublisher.set(this.getPose());
+		// 	// Only contribute the stablePose to Pose Estimation!
+		// 	if (useVision)
+		// 	{
+		// 		this.m_odometry.addVisionMeasurement(newStablePose, Timer.getFPGATimestamp() - limelight.getLatencyInSeconds());
+		// 	}
+		// 	this.llStablePosePublisher.set(newStablePose);
+		// }
+		// this.posePublisher.set(this.getPose());
 	}
 
-	private Rotation2d getGyroHeading() {
+	public double getGyroHeadingInRad()
+	{
+		return MathUtil.inputModulus(this.m_gyro.getYaw().getValue().in(Units.Radians), -Math.PI, Math.PI);
+	}
+
+	public Rotation2d getGyroHeading() {
 		// Gyro at zero should be facing the enemy side!
-		return Rotation2d.fromRadians(MathUtil.inputModulus(this.m_gyro.getYaw().getValue().in(Units.Radians), -Math.PI, Math.PI));
+		return Rotation2d.fromRadians(this.getGyroHeadingInRad());
 	}
 
 	/**
@@ -381,7 +400,8 @@ public class Drivetrain extends SubsystemBase {
 		{
 			return this.m_field.getRobotPose();
 		}
-		return this.m_odometry.getEstimatedPosition();
+		// return this.m_odometry.getEstimatedPosition();
+		return this.odometry.getEstimatedPose();
 	}
 
 	private void dashboardPrintModuleSpeeds(String name, SwerveModule module) {

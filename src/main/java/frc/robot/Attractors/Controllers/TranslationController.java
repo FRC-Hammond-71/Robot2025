@@ -10,12 +10,15 @@ public class TranslationController
 {
     public final Attractor referenceAttractor;
 
-    private PIDController translationXPID = new PIDController(2.5, 0, 0);
-    private PIDController translationYPID = new PIDController(2.5, 0, 0);
+    private PIDController translationXPID = new PIDController(3, 0, 0);
+    private PIDController translationYPID = new PIDController(3, 0, 0);
 
     public TranslationController(Attractor referenceAttractor)
     {
         this.referenceAttractor = referenceAttractor;
+
+        this.translationXPID.setTolerance(0.0127);
+        this.translationYPID.setTolerance(0.0127);
     }
 
     /**

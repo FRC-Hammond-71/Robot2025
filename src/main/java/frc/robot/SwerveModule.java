@@ -63,13 +63,20 @@ public class SwerveModule {
 		this.AzimuthPID.setTolerance(2);
 
 		this.AbsoluteEncoder = new CANcoder(encoderDeviceId);
+		// Update at 250Hz
+		this.AbsoluteEncoder.getAbsolutePosition().setUpdateFrequency(250);
 
 		this.DriveMotor = new SparkMax(driveMotorDeviceId, MotorType.kBrushless);
 		SparkConfigurations.ApplyConfigPersistNoReset(this.DriveMotor, SparkConfigurations.BreakMode);
 	}
 
+	public double getMeasuredAzimuthRotationInDeg()
+	{
+		return this.AbsoluteEncoder.getAbsolutePosition().getValue().in(Units.Degrees);
+	}
+
 	public Rotation2d getAzimuthRotation() {
-		return Rotation2d.fromDegrees(this.AbsoluteEncoder.getAbsolutePosition().getValue().in(Units.Degrees));
+		return Rotation2d.fromDegrees(this.getMeasuredAzimuthRotationInDeg());
 	}
 
 	/**
@@ -79,12 +86,14 @@ public class SwerveModule {
 		return this.DriveMotor.getEncoder().getVelocity() / kDriveGearing * kDriveCircumference;
 	}
 
-	public SwerveModulePosition getPosition() {
-		double distanceInMeters = this.DriveMotor.getEncoder().getPosition() / kDriveGearing * kDriveCircumference;
-
-		return new SwerveModulePosition(distanceInMeters, this.getAzimuthRotation());
+	public double getMeasuredDrivePosition()
+	{
+		return this.DriveMotor.getEncoder().getPosition() / kDriveGearing * kDriveCircumference;
 	}
 
+	public SwerveModulePosition getPosition() {
+		return new SwerveModulePosition(this.getMeasuredDrivePosition(), this.getAzimuthRotation());
+	}
 
 	public void Stop() {
 		this.AzimuthMotor.stopMotor();
@@ -117,6 +126,8 @@ public class SwerveModule {
 		double controlVoltage = error * 0.95137420707;
 
 		this.AzimuthMotor.setVoltage(controlVoltage);
+
+		// TODO: Update DRIVE
 	}
 
 	public SwerveModuleState getMeasuredState() {
